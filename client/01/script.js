@@ -3,72 +3,72 @@ var socket = io();
 
 init();
 
-var feed, terminal;
-var clientsOnline;
+var stats = {
+  one : {
+    counts : 0,
+    avgTweetsPerUser: 0,
+    totalStatusUpdates: 0,
+    avgAccountAge: 0,
+    totalAccountAge: 0,
+  },
+  two : {
+    counts : 0,
+    avgTweetsPerUser: 0,
+    totalStatusUpdates: 0,
+    avgAccountAge: 0,
+    totalAccountAge: 0,
+  }
+};
 
 function init() {
-  feed = document.getElementById("feed");
-  terminal = document.getElementById("terminal");
   // send client settings
   socket.emit('init', {
     pageId: 1
   });
 
-  for (var i = 0; i < emails.length; i++) {
+  socket.on('tweetFeed1', function(tweet){
+    // update feed
+    $('#feed1').prepend(
+      $('<p>').html(tweet.text)
+    );
 
-    $('#feed')
-      .append($('<h1>').text(emails[i].subject))
-      .append($('<h2>').text(emails[i].from))
-      .append($('<h2>').text("To: " + emails[i].to))
-      .append($('<h2>').text("Time: " + emails[i].timestamp))
-      .append($('<p>').text(emails[i].body));
-  }
-
-  socket.on('newClient', function(msg){
-    console.log(msg);
-    clientsOnline = msg.clientsOnline;
-    updateBasedOnClientsOnline();
-    var terminalMessage = document.createElement("p");
-
-    $('#terminal').append(
-      $('<p>').html(
-        "<span>USER CONNECTS</span>"
-        + " <b> IP: </b>"
-        + msg.host
-        + " <b> AGENT: </b>"
-        + msg.agent
-        + "<br> <b> "
-        + msg.clientsOnline
-        + "</b> users remain online "
-      ));
+    // display stats
+    calculateStats(tweet, stats.one);
+    $('#stats1').empty();
+    $('#stats1').append($('<b>').html("Average Total Tweets per Account"))
+      .append($('<p>').html(Math.round(stats.one.avgTweetsPerUser)));
+    $('#stats1').append($('<b>').html("Average Account Age"))
+      .append($('<p>').html(Math.round(stats.one.avgAccountAgeDays) + " days"));
   });
 
-  socket.on('clientDisconnect', function(msg){
-    clientsOnline = msg.clientsOnline;
-    updateBasedOnClientsOnline();
+  socket.on('tweetFeed2', function(tweet){
+    // update feed
+    $('#feed2').prepend(
+      $('<p>').html(tweet.text)
+    );
 
-    $('#terminal').append(
-      $('<p>').html(
-        "<span>USER DISCONNECTS</span> <br> <b>"
-        + msg.clientsOnline
-        + "</b> users remain online"
-      ));
-  });
-
-  socket.on('serverMessage', function(msg){
-    $('#terminal').append($('<p>').html(
-      "<i>"
-      + msg.msg
-      + "</i>"
-      ));
+    // display stats
+    calculateStats(tweet, stats.two);
+    $('#stats2').empty();
+    $('#stats2').append($('<b>').html("Average Total Tweets per Account"))
+      .append($('<p>').html(Math.round(stats.two.avgTweetsPerUser)));
+    $('#stats2').append($('<b>').html("Average Account Age"))
+      .append($('<p>').html(Math.round(stats.two.avgAccountAgeDays) + " days"));
   });
 }
 
-function updateBasedOnClientsOnline() {
-  feed.style.opacity = opacityFormula(clientsOnline);
-  console.log(opacityFormula(clientsOnline));
-}
+// calculateStats(tweet, stats.one)
+function calculateStats(tweet, data) {
+  // used for avergaing up variables
+  data.counts += 1;
 
-function opacityFormula(usersOnline) {
-  return Math.exp(usersOnline/60)-1;
+  var currentDate = Date.now();
+  var userCreatedDate = Date.parse(tweet.user.created_at);
+
+  data.totalAccountAge += (currentDate - userCreatedDate);
+  data.avgAccountAge = data.totalAccountAge/data.counts;
+  data.avgAccountAgeDays = data.avgAccountAge / (1000*60*60*24);
+
+  data.totalStatusUpdates += tweet.user.statuses_count;
+  data.avgTweetsPerUser = data.totalStatusUpdates/data.counts;
 }
