@@ -1,0 +1,23 @@
+{
+  "name": "get-scraped",
+  "version": "1.0.0",
+  "description": "Scraping truth, knoweldge, politics, and data",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "scraping",
+    "truth",
+    "knowledge",
+    "politics",
+    "data"
+  ],
+  "author": "Michael G. Braverman",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.14.0",
+    "socket.io": "^1.5.1",
+    "twit": "^2.2.5"
+  }
+}
