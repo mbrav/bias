@@ -55,6 +55,13 @@ function init() {
     $('#stats2').append($('<b>').html("Average Account Age"))
       .append($('<p>').html(Math.round(stats.two.avgAccountAgeDays) + " days"));
   });
+
+  socket.on('concordance1', function(data){
+    console.log(data);
+  });
+  socket.on('concordance2', function(data){
+    console.log(data);
+  });
 }
 
 // calculateStats(tweet, stats.one)
