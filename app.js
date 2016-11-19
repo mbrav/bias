@@ -6,6 +6,7 @@ var app = express();
 var serv = require('http').Server(app);
 var request = require('request-json');
 var Twit = require('twit');
+var natural = require('natural');
 
 app.get('/',function(req, res) {
 	res.sendFile(__dirname + '/client/index.html');
@@ -24,11 +25,13 @@ var clientsOnline = 0;
 var analysisGroups = {
 	1 : {
 		concordance: {},
-		tokens: []
+		tokens: [],
+		txtBuffer: []
 	},
 	2 : {
 		concordance: {},
-		tokens: []
+		tokens: [],
+		txtBuffer: []
 	}
 }
 
@@ -83,7 +86,6 @@ io.sockets.on('connection', function(socket) {
 		  });
   });
 
-
   socket.on('disconnect', function() {
     clientsOnline--;
   });
@@ -91,39 +93,41 @@ io.sockets.on('connection', function(socket) {
 
 // calculate and transmit >sorted< conocordences every 5 seconds
 setInterval(function () {
-	sortConcordences(analysisGroups[1]);
-	sortConcordences(analysisGroups[2]);
-	io.emit('concordance1', analysisGroups[1].tokens.slice(0, 100));
-	io.emit('concordance2', analysisGroups[2].tokens.slice(0, 100));
 
-	console.log("Con1 Length:" + analysisGroups[1].tokens.length + "  Con2 Length:" + analysisGroups[2].tokens.length);
+	// calulate td-idf
+	calculateTfIdf(analysisGroups[1]);
+	calculateTfIdf(analysisGroups[2]);
+
+	// sort tokens
+	sortTokens(analysisGroups[1]);
+	sortTokens(analysisGroups[2]);
+
+	// send tokens to client
+	io.emit('tokens1', analysisGroups[1].tokens.slice(0,100));
+	io.emit('tokens2', analysisGroups[2].tokens.slice(0,100));
+
 }, 5000);
-
-function conceptNet(word) {
-	var client = request.createClient('http://api.conceptnet.io/c/en/');
-	client.get(word, function(err, res, body) {
-	  return body;
-	});
-}
 
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
 function updateWordConcordance(string, group) {
 	var concord = group.concordance;
 	var tokens = group.tokens;
+	var buffer = group.txtBuffer;
+
 	var parsedString = string.replace(/\s+/g, " ")
-       .replace(/[^a-zA-Z ]/g, "")
-      //  .replace(/\@(\w+)/g, "") // exclude usernames
-      //  .replace(/\#(\w+)/g, "") // exclude hastags
+       .replace(/([^a-zA-Z ]|http|https)/g, "") // remove symbols and links
+       .replace("RT", "") // exclude retweet signs
        .toLowerCase();
 	var tokens = parsedString.split(" ");
+	buffer.push(parsedString); // push to strings
 	for (var i = 0; i < tokens.length; i++) {
     var word = tokens[i];
     //if its a new word:
     if (concord[word] === undefined) {
       //create the key (the word) and value (1) in the concordance object:
       concord[word] = 1;
-			tokens.push({
+			group.tokens.push({
 				word: word,
 				count: 1
 			});  //if we have a new word, add it to the array.
@@ -134,14 +138,46 @@ function updateWordConcordance(string, group) {
 }
 
 // use sparangly on large datasets
-function sortConcordences(group) {
+function sortTokens(group) {
 	var concord = group.concordance;
 	var tokens = group.tokens;
+
 	for (var i in tokens) {
 		tokens[i].count = concord[tokens.word];
 	}
 
 	tokens.sort(function(a, b) {
 		return (b.count - a.count);
+	});
+}
+
+function calculateTfIdf(group) {
+  tfidf = new natural.TfIdf();
+	// var concord = group.concordance;
+	var tokens = group.tokens;
+	var buffer = group.txtBuffer;
+
+	// add all sentences to the tfidf calculator
+	for (var i in buffer) {
+		tfidf.addDocument(buffer[i]);
+	}
+
+	// go throught all words and average their tf-idf
+	for (var i in tokens) {
+		var avg = 0.0;
+		var count = 0;
+		tfidf.tfidfs(tokens[i].word, function(i, measure) {
+		    avg += measure;
+				count ++;
+		});
+		group.tokens[i].avgIdf = avg/count;
+	}
+}
+
+// for concept net, UNUSED
+function conceptNet(word) {
+	var client = request.createClient('http://api.conceptnet.io/c/en/');
+	client.get(word, function(err, res, body) {
+		return body;
 	});
 }

@@ -20,6 +20,8 @@ var stats = {
   }
 };
 
+var tokens1, tokens2;
+
 function init() {
   // send client settings
   socket.emit('init', {
@@ -27,40 +29,79 @@ function init() {
   });
 
   socket.on('tweetFeed1', function(tweet){
+    var feed = $('#feed1');
+    var stat = $('#stats1');
+
     // update feed
-    $('#feed1').prepend(
+    feed.prepend(
       $('<p>').html(tweet.text)
     );
 
     // display stats
     calculateStats(tweet, stats.one);
-    $('#stats1').empty();
-    $('#stats1').append($('<b>').html("Average Total Tweets per Account"))
+    stat.empty();
+
+    // update word list
+    stat.append($('<b>').html("Top Words"))
+    stat.append($('<div>').attr('id', 'words1'));
+    if (tokens1 != null) {
+      for (var i = 0; i < 30 && tokens1.length; i++) {
+        stat.append($('<p>').html(
+          "<b>" +
+          (i + 1) + "</b> <u>"
+          + tokens1[i].word.capitalize()
+          + "</u>, avgidf: "
+          + tokens1[i].avgIdf.toFixed(3)
+        ));
+      }
+    }
+
+    stat.append($('<b>').html("Average Total Tweets per Account"))
       .append($('<p>').html(Math.round(stats.one.avgTweetsPerUser)));
-    $('#stats1').append($('<b>').html("Average Account Age"))
+    stat.append($('<b>').html("Average Account Age"))
       .append($('<p>').html(Math.round(stats.one.avgAccountAgeDays) + " days"));
   });
 
   socket.on('tweetFeed2', function(tweet){
+    var feed = $('#feed2');
+    var stat = $('#stats2');
+
     // update feed
-    $('#feed2').prepend(
+    feed.prepend(
       $('<p>').html(tweet.text)
     );
 
     // display stats
     calculateStats(tweet, stats.two);
-    $('#stats2').empty();
-    $('#stats2').append($('<b>').html("Average Total Tweets per Account"))
+    stat.empty();
+
+    // update word list
+    stat.append($('<b>').html("Top Words"))
+    stat.append($('<div>').attr('id', 'words2'));
+    if (tokens2 != null) {
+      for (var i = 0; i < 30 && tokens1.length; i++) {
+        stat.append($('<p>').html(
+          "<b>" +
+          (i + 1) + "</b> <u>"
+          + tokens2[i].word.capitalize()
+          + "</u>, avgidf: "
+          + tokens2[i].avgIdf.toFixed(3)
+        ));
+      }
+    }
+
+    stat.append($('<b>').html("Average Total Tweets per Account"))
       .append($('<p>').html(Math.round(stats.two.avgTweetsPerUser)));
-    $('#stats2').append($('<b>').html("Average Account Age"))
+    stat.append($('<b>').html("Average Account Age"))
       .append($('<p>').html(Math.round(stats.two.avgAccountAgeDays) + " days"));
   });
 
-  socket.on('concordance1', function(data){
-    console.log(data);
+  socket.on('tokens1', function(data){
+    tokens1 = data;
   });
-  socket.on('concordance2', function(data){
-    console.log(data);
+
+  socket.on('tokens2', function(data){
+    tokens2 = data;
   });
 }
 
@@ -78,4 +119,8 @@ function calculateStats(tweet, data) {
 
   data.totalStatusUpdates += tweet.user.statuses_count;
   data.avgTweetsPerUser = data.totalStatusUpdates/data.counts;
+}
+
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
 }
