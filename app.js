@@ -20,10 +20,17 @@ console.log('SERVER STARTED');
 
 var clientsOnline = 0;
 
-var concordance1 = {};
-var concordance2 = {};
-var keys1 = [];
-var keys2 = [];
+// stat sotrage
+var analysisGroups = {
+	1 : {
+		concordance: {},
+		tokens: []
+	},
+	2 : {
+		concordance: {},
+		tokens: []
+	}
+}
 
 // primary API
 var T = new Twit({
@@ -65,14 +72,14 @@ io.sockets.on('connection', function(socket) {
 				// send tweet to client
 				socket.emit('tweetFeed1', tweet);
 				// update concordance
-				updateWordConcordance(tweet.text, concordance1, keys1);
+				updateWordConcordance(tweet.text, analysisGroups[1]);
 		  });
 
 		  stream2.on('tweet', function (tweet) {
 				// send tweet to client
 				socket.emit('tweetFeed2', tweet);
 				// update concordance
-				updateWordConcordance(tweet.text, concordance2, keys2);
+				updateWordConcordance(tweet.text, analysisGroups[2]);
 		  });
   });
 
@@ -84,12 +91,12 @@ io.sockets.on('connection', function(socket) {
 
 // calculate and transmit >sorted< conocordences every 5 seconds
 setInterval(function () {
-	sortConcordences(concordance1, keys1);
-	sortConcordences(concordance2, keys2);
-	io.emit('concordance1', keys1.slice(0, 100));
-	io.emit('concordance2', keys2.slice(0, 100));
+	sortConcordences(analysisGroups[1]);
+	sortConcordences(analysisGroups[2]);
+	io.emit('concordance1', analysisGroups[1].tokens.slice(0, 100));
+	io.emit('concordance2', analysisGroups[2].tokens.slice(0, 100));
 
-	console.log("Con1 Length:" + keys1.length + "  Con2 Length:" + keys2.length);
+	console.log("Con1 Length:" + analysisGroups[1].tokens.length + "  Con2 Length:" + analysisGroups[2].tokens.length);
 }, 5000);
 
 function conceptNet(word) {
@@ -101,7 +108,9 @@ function conceptNet(word) {
 
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
-function updateWordConcordance(string, concordance, keys) {
+function updateWordConcordance(string, group) {
+	var concord = group.concordance;
+	var tokens = group.tokens;
 	var parsedString = string.replace(/\s+/g, " ")
        .replace(/[^a-zA-Z ]/g, "")
       //  .replace(/\@(\w+)/g, "") // exclude usernames
@@ -111,26 +120,28 @@ function updateWordConcordance(string, concordance, keys) {
 	for (var i = 0; i < tokens.length; i++) {
     var word = tokens[i];
     //if its a new word:
-    if (concordance[word] === undefined) {
+    if (concord[word] === undefined) {
       //create the key (the word) and value (1) in the concordance object:
-      concordance[word] = 1;
-			keys.push({
+      concord[word] = 1;
+			tokens.push({
 				word: word,
 				count: 1
 			});  //if we have a new word, add it to the array.
     } else { // if we've seen this word before, increment the value:
-      concordance[word] ++;
+      concord[word] ++;
     }
   }
 }
 
 // use sparangly on large datasets
-function sortConcordences(concordance, keys) {
-	for (var i in keys) {
-		keys[i].count = concordance[keys[i].word];
+function sortConcordences(group) {
+	var concord = group.concordance;
+	var tokens = group.tokens;
+	for (var i in tokens) {
+		tokens[i].count = concord[tokens.word];
 	}
 
-	keys.sort(function(a, b) {
+	tokens.sort(function(a, b) {
 		return (b.count - a.count);
 	});
 }
