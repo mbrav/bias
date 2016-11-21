@@ -45,7 +45,7 @@ h1 > span, h2 > span {
 
 .stats {
   max-width: 36%;
-  font-size: 18px;
+  font-size: 16px;
   position: fixed;
   display: block;
   bottom: 0;
@@ -64,4 +64,12 @@ h1 > span, h2 > span {
 
 #stats2 {
   right: 0;
+}
+
+.words p {
+  font-size: 12px;
+}
+
+.words p span {
+  text-align: right;
 }

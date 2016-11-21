@@ -54,8 +54,8 @@ var T2 = new Twit({
 });
 
 // twitter streAMS
-var stream1 = T.stream('statuses/filter', { track: ['#notmypresident']});
-var stream2 = T2.stream('statuses/filter', { track: ['#PresidentElectTrump']});
+var stream1 = T.stream('statuses/filter', { track: ['putin']});
+var stream2 = T2.stream('statuses/filter', { track: ['assange']});
 
 var io = require('socket.io')(serv,{});
 io.sockets.on('connection', function(socket) {
@@ -69,21 +69,21 @@ io.sockets.on('connection', function(socket) {
 		console.log("INIT client message");
 		console.log(msg);
 
-      console.log("SERVING page ID " + msg.pageId + " to client");
-			console.log("serving app");
-		  stream1.on('tweet', function (tweet) {
-				// send tweet to client
-				socket.emit('tweetFeed1', tweet);
-				// update concordance
-				updateWordConcordance(tweet.text, analysisGroups[1]);
-		  });
+    console.log("SERVING page ID " + msg.pageId + " to client");
+		console.log("serving app");
+	  stream1.on('tweet', function (tweet) {
+			// send tweet to client
+			socket.emit('tweetFeed1', tweet);
+			// update concordance
+			updateWordConcordance(tweet.text, analysisGroups[1]);
+	  });
 
-		  stream2.on('tweet', function (tweet) {
-				// send tweet to client
-				socket.emit('tweetFeed2', tweet);
-				// update concordance
-				updateWordConcordance(tweet.text, analysisGroups[2]);
-		  });
+	  stream2.on('tweet', function (tweet) {
+			// send tweet to client
+			socket.emit('tweetFeed2', tweet);
+			// update concordance
+			updateWordConcordance(tweet.text, analysisGroups[2]);
+	  });
   });
 
   socket.on('disconnect', function() {
@@ -116,9 +116,10 @@ function updateWordConcordance(string, group) {
 	var buffer = group.txtBuffer;
 
 	var parsedString = string.replace(/\s+/g, " ")
-       .replace(/([^a-zA-Z ]|http|https)/g, "") // remove symbols and links
-       .replace("RT", "") // exclude retweet signs
-       .toLowerCase();
+		.replace(/([^a-zA-Z ]|http|https)/g, "") // remove symbols and links
+		.replace("RT", "") // exclude retweet signs
+		.replace(/\b(@)\w\w+/g, "1917!!") // exclude usernames
+		.toLowerCase();
 	var tokens = parsedString.split(" ");
 	buffer.push(parsedString); // push to strings
 	for (var i = 0; i < tokens.length; i++) {
@@ -140,14 +141,20 @@ function updateWordConcordance(string, group) {
 // use sparangly on large datasets
 function sortTokens(group) {
 	var concord = group.concordance;
-	var tokens = group.tokens;
 
-	for (var i in tokens) {
-		tokens[i].count = concord[tokens.word];
+	// update the tokened words with their count
+	for (var i in group.tokens) {
+		group.tokens[i].count = concord[group.tokens[i].word];
 	}
 
-	tokens.sort(function(a, b) {
-		return (b.count - a.count);
+	// sort tokens by count
+	// group.tokens.sort(function(a, b) {
+	// 	return (b.count - a.count);
+	// });
+
+	// sprt tokens by idf
+	group.tokens.sort(function(a, b) {
+		return (b.avgIdf - a.avgIdf);
 	});
 }
 
@@ -167,8 +174,8 @@ function calculateTfIdf(group) {
 		var avg = 0.0;
 		var count = 0;
 		tfidf.tfidfs(tokens[i].word, function(i, measure) {
-		    avg += measure;
-				count ++;
+	    avg += measure;
+			count ++;
 		});
 		group.tokens[i].avgIdf = avg/count;
 	}

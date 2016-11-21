@@ -43,15 +43,16 @@ function init() {
 
     // update word list
     stat.append($('<b>').html("Top Words"))
-    stat.append($('<div>').attr('id', 'words1'));
+    stat.append($('<div>').attr('id', 'words1').addClass('words'));
     if (tokens1 != null) {
       for (var i = 0; i < 30 && tokens1.length; i++) {
-        stat.append($('<p>').html(
+        $('#words1').append($('<p>').html(
           "<b>" +
-          (i + 1) + "</b> <u>"
+          tokens1[i].count + "</b> <u>"
           + tokens1[i].word.capitalize()
-          + "</u>, avgidf: "
+          + "</u>, <span>"
           + tokens1[i].avgIdf.toFixed(3)
+          + "</span>"
         ));
       }
     }
@@ -77,15 +78,16 @@ function init() {
 
     // update word list
     stat.append($('<b>').html("Top Words"))
-    stat.append($('<div>').attr('id', 'words2'));
+    stat.append($('<div>').attr('id', 'words2').addClass('words'));
     if (tokens2 != null) {
-      for (var i = 0; i < 30 && tokens1.length; i++) {
-        stat.append($('<p>').html(
+      for (var i = 0; i < 30 && tokens2.length; i++) {
+        $('#words2').append($('<p>').html(
           "<b>" +
-          (i + 1) + "</b> <u>"
+          tokens2[i].count + "</b> <u>"
           + tokens2[i].word.capitalize()
-          + "</u>, avgidf: "
+          + "</u>, <u>"
           + tokens2[i].avgIdf.toFixed(3)
+          + "</u>"
         ));
       }
     }
@@ -97,10 +99,12 @@ function init() {
   });
 
   socket.on('tokens1', function(data){
+    console.log(data);
     tokens1 = data;
   });
 
   socket.on('tokens2', function(data){
+    console.log(data);
     tokens2 = data;
   });
 }
