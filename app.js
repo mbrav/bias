@@ -54,7 +54,7 @@ var T2 = new Twit({
 });
 
 // twitter streAMS
-var stream1 = T.stream('statuses/filter', { track: ['putin']});
+var stream1 = T.stream('statuses/filter', { track: ['snowden']});
 var stream2 = T2.stream('statuses/filter', { track: ['assange']});
 
 var io = require('socket.io')(serv,{});
@@ -106,6 +106,10 @@ setInterval(function () {
 	io.emit('tokens1', analysisGroups[1].tokens.slice(0,100));
 	io.emit('tokens2', analysisGroups[2].tokens.slice(0,100));
 
+	// trim data
+	trimData(analysisGroups[1]);
+	trimData(analysisGroups[2]);
+
 }, 5000);
 
 // Based on Bryan Ma's "Concordances / Word Counting"
@@ -156,6 +160,11 @@ function sortTokens(group) {
 	group.tokens.sort(function(a, b) {
 		return (b.avgIdf - a.avgIdf);
 	});
+}
+
+function trimData(group) {
+	group.tokens.slice(0, 200);
+	group.txtBuffer.slice(0, 200);
 }
 
 function calculateTfIdf(group) {
