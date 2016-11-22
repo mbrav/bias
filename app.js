@@ -7,6 +7,7 @@ var serv = require('http').Server(app);
 var request = require('request-json');
 var Twit = require('twit');
 var natural = require('natural');
+var io = require('socket.io')(serv,{});
 
 app.get('/',function(req, res) {
 	res.sendFile(__dirname + '/client/index.html');
@@ -35,82 +36,93 @@ var analysisGroups = {
 	}
 }
 
-// primary API
-var T = new Twit({
-	consumer_key:         'sidVniQDxPoo3yaNs5pmivFBo',
-	consumer_secret:      '88mHZa7CML1U2tarjGwPGWg3Ulm8kjLtFrM0iGKY0BQT1f0gDp',
-	access_token:         '237022647-BsVts2RPYaPg6iT9HS2vkaGZk54I4Nkq5QDr4tjT',
-	access_token_secret:  '33lZyypJ2UKlSrrLc1PnS8UY8FUrupsUohLuNBbfe35Rc',
-	timeout_ms:           60*1000,
-});
+init();
+function init() {
+	// setup socket and twitter stream
+	socketStreamSetup();
+	// set an interval at which data is processed and emited
+	emitDataInterval(5000);
+}
 
-// backup API's (a.k.a. fuck the system)
-var T2 = new Twit({
-	consumer_key:         '8hGzNWjVnuuaulqsq1jLg8Odq',
-	consumer_secret:      'NmPpZ3vaqJyDlGgdxPPeIt4wH58q9SuFB2Kmk4bjPy3VYYLrhj',
-	access_token:         '237022647-jYWDdY4aLkRfDeH8wStaCTDtfMf1ibccDaL3HH2y',
-	access_token_secret:  'GfDxBCaYKGqAm1EEpt3P8s4TG79Pq0VXEW8LMB0JKmHE1',
-	timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
-});
+function socketStreamSetup() {
+	// primary API
+	var T = new Twit({
+		consumer_key:         'sidVniQDxPoo3yaNs5pmivFBo',
+		consumer_secret:      '88mHZa7CML1U2tarjGwPGWg3Ulm8kjLtFrM0iGKY0BQT1f0gDp',
+		access_token:         '237022647-BsVts2RPYaPg6iT9HS2vkaGZk54I4Nkq5QDr4tjT',
+		access_token_secret:  '33lZyypJ2UKlSrrLc1PnS8UY8FUrupsUohLuNBbfe35Rc',
+		timeout_ms:           60*1000,
+	});
 
-// twitter streAMS
-var stream1 = T.stream('statuses/filter', { track: ['snowden']});
-var stream2 = T2.stream('statuses/filter', { track: ['assange']});
+	// backup API's (a.k.a. fuck the system)
+	var T2 = new Twit({
+		consumer_key:         '8hGzNWjVnuuaulqsq1jLg8Odq',
+		consumer_secret:      'NmPpZ3vaqJyDlGgdxPPeIt4wH58q9SuFB2Kmk4bjPy3VYYLrhj',
+		access_token:         '237022647-jYWDdY4aLkRfDeH8wStaCTDtfMf1ibccDaL3HH2y',
+		access_token_secret:  'GfDxBCaYKGqAm1EEpt3P8s4TG79Pq0VXEW8LMB0JKmHE1',
+		timeout_ms:           60*1000,  // optional HTTP request timeout to apply to all requests.
+	});
 
-var io = require('socket.io')(serv,{});
-io.sockets.on('connection', function(socket) {
-	// var concept = conceptNet("omg");
-  clientsOnline++;
+	// twitter streAMS
+	var stream1 = T.stream('statuses/filter', { track: ['snowden']});
+	var stream2 = T2.stream('statuses/filter', { track: ['assange']});
 
-  // setup the client once his settings are received
-	console.log("CLIENT connected");
+	io.sockets.on('connection', function(socket) {
+		// var concept = conceptNet("omg");
+	  clientsOnline++;
 
-  socket.on('init', function(msg) {
-		console.log("INIT client message");
-		console.log(msg);
+	  // setup the client once his settings are received
+		console.log("CLIENT connected");
 
-    console.log("SERVING page ID " + msg.pageId + " to client");
-		console.log("serving app");
-	  stream1.on('tweet', function (tweet) {
-			// send tweet to client
-			socket.emit('tweetFeed1', tweet);
-			// update concordance
-			updateWordConcordance(tweet.text, analysisGroups[1]);
+	  socket.on('init', function(msg) {
+			console.log("INIT client message");
+			console.log(msg);
+
+	    console.log("SERVING page ID " + msg.pageId + " to client");
+			console.log("serving app");
+		  stream1.on('tweet', function (tweet) {
+				// send tweet to client
+				socket.emit('tweetFeed1', tweet);
+				// update concordance
+				updateWordConcordance(tweet.text, analysisGroups[1]);
+		  });
+
+		  stream2.on('tweet', function (tweet) {
+				// send tweet to client
+				socket.emit('tweetFeed2', tweet);
+				// update concordance
+				updateWordConcordance(tweet.text, analysisGroups[2]);
+		  });
 	  });
 
-	  stream2.on('tweet', function (tweet) {
-			// send tweet to client
-			socket.emit('tweetFeed2', tweet);
-			// update concordance
-			updateWordConcordance(tweet.text, analysisGroups[2]);
+	  socket.on('disconnect', function() {
+	    clientsOnline--;
 	  });
-  });
+	});
+}
 
-  socket.on('disconnect', function() {
-    clientsOnline--;
-  });
-});
+function emitDataInterval(delay) {
+	// calculate and transmit >sorted< conocordences every 5 seconds
+	setInterval(function () {
 
-// calculate and transmit >sorted< conocordences every 5 seconds
-setInterval(function () {
+		// calulate td-idf
+		calculateTfIdf(analysisGroups[1]);
+		calculateTfIdf(analysisGroups[2]);
 
-	// calulate td-idf
-	calculateTfIdf(analysisGroups[1]);
-	calculateTfIdf(analysisGroups[2]);
+		// sort tokens
+		sortTokens(analysisGroups[1]);
+		sortTokens(analysisGroups[2]);
 
-	// sort tokens
-	sortTokens(analysisGroups[1]);
-	sortTokens(analysisGroups[2]);
+		// send tokens to client
+		io.emit('tokens1', analysisGroups[1].tokens.slice(0,100));
+		io.emit('tokens2', analysisGroups[2].tokens.slice(0,100));
 
-	// send tokens to client
-	io.emit('tokens1', analysisGroups[1].tokens.slice(0,100));
-	io.emit('tokens2', analysisGroups[2].tokens.slice(0,100));
+		// trim data
+		trimData(analysisGroups[1]);
+		trimData(analysisGroups[2]);
 
-	// trim data
-	trimData(analysisGroups[1]);
-	trimData(analysisGroups[2]);
-
-}, 5000);
+	}, delay);
+}
 
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
