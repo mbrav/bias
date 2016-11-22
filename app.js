@@ -38,10 +38,12 @@ var analysisGroups = {
 
 init();
 function init() {
-	// setup socket and twitter stream
-	socketStreamSetup();
-	// set an interval at which data is processed and emited
-	emitDataInterval(5000);
+	// // setup socket and twitter stream
+	// socketStreamSetup();
+	// // set an interval at which data is processed and emited
+	// emitDataInterval(5000);
+	// analyse texts
+	analyzeTextFile('/data/bible.txt', analysisGroups[1]);
 }
 
 function socketStreamSetup() {
@@ -202,10 +204,37 @@ function calculateTfIdf(group) {
 	}
 }
 
+// MISC STUFF
 // for concept net, UNUSED
 function conceptNet(word) {
 	var client = request.createClient('http://api.conceptnet.io/c/en/');
 	client.get(word, function(err, res, body) {
 		return body;
+	});
+}
+
+// for analysing text files
+function analyzeTextFile(filePath, group) {
+	console.log('CONCORDANCE ANALYSIS INITIATED');
+	var fs = require('fs');
+	fs.readFile( __dirname + filePath, function (err, data) {
+		if (err) {
+			throw err;
+		}
+
+		console.log(data.toString().slice(0, 500) + "... \n");
+
+		var textString = data.toString()
+
+		updateWordConcordance(textString, group);
+		calculateTfIdf(group);
+		sortTokens(group);
+
+		console.log("Number of concordanced words in " + filePath + ": " +  group.tokens.length);
+		console.log("Top concordanced words: \n");
+
+		for (var i = 0; i < 100; i++) {
+			console.log((i+1) + " " +  group.tokens[i].word + " " +  group.tokens[i].count + " times, td-idf: " + group.tokens[i].avgIdf.toFixed(3));
+		}
 	});
 }
