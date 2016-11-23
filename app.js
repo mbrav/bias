@@ -9,6 +9,17 @@ var Twit = require('twit');
 var natural = require('natural');
 var io = require('socket.io')(serv, {});
 
+// rpi/printer setup
+var Gpio = require('onoff').Gpio;
+var buzzer = new Gpio(17, 'out');
+var led = new Gpio(2, 'out');
+var SerialPort = require('serialport'),
+//serialPort = new SerialPort('/dev/ttyUSB0', {
+serialPort = new SerialPort('/dev/serial0', {
+  baudrate: 19200
+}),
+Printer = require('thermalprinter');
+
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/client/index.html');
 });
@@ -86,6 +97,8 @@ function socketStreamSetup() {
       console.log("SERVING page ID " + msg.pageId + " to client");
       console.log("serving app");
       stream1.on('tweet', function(tweet) {
+				// emit notification
+				notification();
         // send tweet to client
         socket.emit('tweetFeed1', tweet);
         // update concordance
@@ -93,6 +106,8 @@ function socketStreamSetup() {
       });
 
       stream2.on('tweet', function(tweet) {
+				// emit notification
+				notification();
         // send tweet to client
         socket.emit('tweetFeed2', tweet);
         // update concordance
@@ -213,4 +228,72 @@ function conceptNet(word) {
   client.get(word, function(err, res, body) {
     return body;
   });
+}
+
+function printerPrint(string) {
+  serialPort.on('open', function() {
+    var printer = new Printer(serialPort);
+    printer.on('ready', function() {
+      printer
+        .indent(10)
+        .horizontalLine(16)
+        .bold(true)
+        .indent(10)
+        .printLine(string) // print passed string
+        .print(function() {
+          console.log('done');
+          process.exit();
+        });
+    });
+  });
+}
+
+function notification() {
+	glitchTune(1);
+	led.writeSync(1);
+}
+
+// turn off all signals every 250ms
+setInterval(function() {
+	glitchTune(0);
+	led.writeSync(0);
+}, 250);
+
+var intervals = [];
+function glitchTune(state) {
+	if (state == 1) {
+		intervals[0] = setInterval(function() {
+			buzz(1);
+		}, 0.125);
+
+		intervals[1] = setInterval(function() {
+			buzz(1);
+		}, 0.512);
+
+		intervals[2] = setInterval(function() {
+			buzz(1);
+		}, 0.536);
+
+		intervals[3] = setInterval(function() {
+			buzz(0);
+		}, 0.256);
+
+		intervals[4] = setInterval(function() {
+			buzz(0);
+		}, 0.768);
+
+		intervals[5] = setInterval(function() {
+			buzz(0);
+		}, 2.024);
+	}
+
+	if (state == 0) {
+		for (i in intervals) {
+			clearInterval(intervals[i]);
+		}
+	}
+
+	function buzz(state) {
+		buzzer.writeSync(state);
+	}
 }
