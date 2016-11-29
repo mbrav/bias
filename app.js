@@ -9,6 +9,10 @@ var Twit = require('twit');
 var natural = require('natural');
 var io = require('socket.io')(serv, {});
 
+// for running terminal commands
+var childProcess = require('child_process'), cmd;
+var talking = false;
+
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/client/index.html');
 });
@@ -66,10 +70,10 @@ function socketStreamSetup() {
 
   // twitter streAMS
   var stream1 = T.stream('statuses/filter', {
-    track: ['deadmau5']
+    track: ['hello']
   });
   var stream2 = T2.stream('statuses/filter', {
-    track: ['assange', 'snowden']
+    track: ['syria']
   });
 
   io.sockets.on('connection', function(socket) {
@@ -129,6 +133,30 @@ function emitDataInterval(delay) {
   }, delay);
 }
 
+function eSpeak(text) {
+  // talk only when not currently talking, avoid overlaping
+  if (!talking) {
+    talking = true;
+    // say -v Samantha -r 2000 "Hello I like to talk super fast"
+    var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
+    cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
+    console.log('stdout: ' + stdout);
+    console.log('stderr: ' + stderr);
+    console.log("voice ON");
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    }
+    });
+    cmd.on('exit', function (code) {
+      talking = false;
+    });
+  }
+}
+
+// function eSpeak(text) {
+//   child_process.spawn('espeak "' + text + '"', [args], [options])
+// }
+
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
 function updateWordConcordance(string, group) {
@@ -143,6 +171,7 @@ function updateWordConcordance(string, group) {
     .toLowerCase();
   var tokens = parsedString.split(" ");
   buffer.push(parsedString); // push to strings
+  eSpeak(parsedString);
   for (var i = 0; i < tokens.length; i++) {
     var word = tokens[i];
     //if its a new word:
