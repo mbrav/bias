@@ -45,7 +45,8 @@ function init() {
     stat.append($('<b>').html("Top Words"))
     stat.append($('<div>').attr('id', 'words1').addClass('words'));
     if (tokens1 != null) {
-      for (var i = 0; i < 30 && tokens1.length; i++) {
+      console.log(tokens1);
+      for (var i = 0; i < tokens1.length; i++) {
         $('#words1').append($('<p>').html(
           "<b>" +
           tokens1[i].count + "</b> <u>"
@@ -80,7 +81,8 @@ function init() {
     stat.append($('<b>').html("Top Words"))
     stat.append($('<div>').attr('id', 'words2').addClass('words'));
     if (tokens2 != null) {
-      for (var i = 0; i < 30 && tokens2.length; i++) {
+      console.log(tokens2);
+      for (var i = 0; i < tokens2.length; i++) {
         $('#words2').append($('<p>').html(
           "<b>" +
           tokens2[i].count + "</b> <u>"

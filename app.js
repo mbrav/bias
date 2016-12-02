@@ -29,12 +29,10 @@ var clientsOnline = 0;
 // stat sotrage
 var analysisGroups = {
   1: {
-    concordance: {},
     tokens: [],
     txtBuffer: []
   },
   2: {
-    concordance: {},
     tokens: [],
     txtBuffer: []
   }
@@ -70,44 +68,58 @@ function socketStreamSetup() {
 
   // twitter streAMS
   var stream1 = T.stream('statuses/filter', {
-    track: ['hello']
+    track: ['snowden']
   });
   var stream2 = T2.stream('statuses/filter', {
     track: ['syria']
   });
 
-  io.sockets.on('connection', function(socket) {
-    // var concept = conceptNet("omg");
-    clientsOnline++;
-
-    // setup the client once his settings are received
-    console.log("CLIENT connected");
-
-    socket.on('init', function(msg) {
-      console.log("INIT client message");
-      console.log(msg);
-
-      console.log("SERVING page ID " + msg.pageId + " to client");
-      console.log("serving app");
-      stream1.on('tweet', function(tweet) {
-        // send tweet to client
-        socket.emit('tweetFeed1', tweet);
-        // update concordance
-        updateWordConcordance(tweet.text, analysisGroups[1]);
-      });
-
-      stream2.on('tweet', function(tweet) {
-        // send tweet to client
-        socket.emit('tweetFeed2', tweet);
-        // update concordance
-        updateWordConcordance(tweet.text, analysisGroups[2]);
-      });
-    });
-
-    socket.on('disconnect', function() {
-      clientsOnline--;
-    });
+  stream1.on('tweet', function(tweet) {
+    // send tweet to client
+    io.emit('tweetFeed1', tweet);
+    // update concordance
+    updateWordConcordance(tweet.text, analysisGroups[1]);
   });
+
+  stream2.on('tweet', function(tweet) {
+    // send tweet to client
+    io.emit('tweetFeed2', tweet);
+    // update concordance
+    updateWordConcordance(tweet.text, analysisGroups[2]);
+  });
+
+  // io.sockets.on('connection', function(socket) {
+  //   // var concept = conceptNet("omg");
+  //   clientsOnline++;
+  //
+  //   // setup the client once his settings are received
+  //   console.log("CLIENT connected");
+  //
+  //   socket.on('init', function(msg) {
+  //     console.log("INIT client message");
+  //     console.log(msg);
+  //
+  //     console.log("SERVING page ID " + msg.pageId + " to client");
+  //     console.log("serving app");
+  //     stream1.on('tweet', function(tweet) {
+  //       // send tweet to client
+  //       socket.emit('tweetFeed1', tweet);
+  //       // update concordance
+  //       updateWordConcordance(tweet.text, analysisGroups[1]);
+  //     });
+  //
+  //     stream2.on('tweet', function(tweet) {
+  //       // send tweet to client
+  //       socket.emit('tweetFeed2', tweet);
+  //       // update concordance
+  //       updateWordConcordance(tweet.text, analysisGroups[2]);
+  //     });
+  //   });
+  //
+  //   socket.on('disconnect', function() {
+  //     clientsOnline--;
+  //   });
+  // });
 }
 
 function emitDataInterval(delay) {
@@ -123,12 +135,14 @@ function emitDataInterval(delay) {
     sortTokens(analysisGroups[2]);
 
     // send tokens to client
-    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 100));
-    io.emit('tokens2', analysisGroups[2].tokens.slice(0, 100));
+    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
+    io.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
 
     // trim data
     trimData(analysisGroups[1]);
     trimData(analysisGroups[2]);
+
+    console.log(analysisGroups[2].tokens);
 
   }, delay);
 }
@@ -140,14 +154,15 @@ function eSpeak(text) {
     // say -v Samantha -r 2000 "Hello I like to talk super fast"
     var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
     cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
-    console.log('stdout: ' + stdout);
-    console.log('stderr: ' + stderr);
+    // console.log('stdout: ' + stdout);
+    // console.log('stderr: ' + stderr);
     console.log("voice ON");
     if (error !== null) {
       console.log('exec error: ' + error);
     }
     });
     cmd.on('exit', function (code) {
+      console.log("voice OFF");
       talking = false;
     });
   }
@@ -160,42 +175,58 @@ function eSpeak(text) {
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
 function updateWordConcordance(string, group) {
-  var concord = group.concordance;
   var tokens = group.tokens;
   var buffer = group.txtBuffer;
 
   var parsedString = string.replace(/\s+/g, " ")
     .replace(/([^a-zA-Z ]|http|https)/g, "") // remove symbols and links
     .replace("RT", "") // exclude retweet signs
+    .replace(" ", "") // exclude spaces signs
     .replace(/\b(@)\w\w+/g, "1917!!") // exclude usernames
     .toLowerCase();
-  var tokens = parsedString.split(" ");
+  var words = parsedString.split(" ");
   buffer.push(parsedString); // push to strings
   eSpeak(parsedString);
-  for (var i = 0; i < tokens.length; i++) {
-    var word = tokens[i];
+  for (var i = 0; i < words.length; i++) {
+    var word = words[i];
+    // console.log(word, group.tokens[tokens.indexOf(word)] tokens.indexOf(word));
     //if its a new word:
-    if (concord[word] === undefined) {
-      //create the key (the word) and value (1) in the concordance object:
-      concord[word] = 1;
+    if (checkForWord(group.tokens, word) == false) {
       group.tokens.push({
         word: word,
         count: 1
-      }); //if we have a new word, add it to the array.
+      });
     } else { // if we've seen this word before, increment the value:
-      concord[word]++;
+      var wordIndex = getIndexOfWord(group.tokens, word);
+      group.tokens[wordIndex].count++;
+      // console.log("Word: " + group.tokens[wordIndex].word + ", count: " + group.tokens[wordIndex].count);
     }
   }
 }
 
+function checkForWord(array, word) {
+  var wordFound = false;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].word == word) {
+      wordFound = true;
+    }
+  }
+  return wordFound;
+}
+
+function getIndexOfWord(array, word) {
+  var index = 0;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].word == word) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
 // use sparangly on large datasets
 function sortTokens(group) {
-  var concord = group.concordance;
-
-  // update the tokened words with their count
-  for (var i in group.tokens) {
-    group.tokens[i].count = concord[group.tokens[i].word];
-  }
 
   // sort tokens by count
   // group.tokens.sort(function(a, b) {
@@ -209,13 +240,12 @@ function sortTokens(group) {
 }
 
 function trimData(group) {
-  group.tokens.slice(0, 200);
-  group.txtBuffer.slice(0, 200);
+  // group.tokens.slice(0, 200);
+  // group.txtBuffer.slice(0, 200);
 }
 
 function calculateTfIdf(group) {
   tfidf = new natural.TfIdf();
-  // var concord = group.concordance;
   var tokens = group.tokens;
   var buffer = group.txtBuffer;
 
