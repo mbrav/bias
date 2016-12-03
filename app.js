@@ -9,10 +9,6 @@ var Twit = require('twit');
 var natural = require('natural');
 var io = require('socket.io')(serv, {});
 
-// rpi/printer setup
-var Gpio = require('onoff').Gpio;
-var buzzer = new Gpio(17, 'out');
-var led = new Gpio(2, 'out');
 var SerialPort = require('serialport'),
 //serialPort = new SerialPort('/dev/ttyUSB0', {
 serialPort = new SerialPort('/dev/serial0', {
@@ -20,6 +16,14 @@ serialPort = new SerialPort('/dev/serial0', {
 }),
 Printer = require('thermalprinter');
 
+// for running terminal commands
+var childProcess = require('child_process'), cmd;
+var talking = false;
+
+// for lcd 
+var Lcd = require('lcd'),
+lcd = new Lcd({rs: 12, e: 21, data: [5, 6, 17, 18], cols: 16, rows: 2});
+ 
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/client/index.html');
 });
@@ -53,7 +57,7 @@ function init() {
   // setup socket and twitter stream
   socketStreamSetup();
   // set an interval at which data is processed and emited
-  emitDataInterval(5000);
+  emitDataInterval(30000);
 }
 
 function socketStreamSetup() {
@@ -77,10 +81,10 @@ function socketStreamSetup() {
 
   // twitter streAMS
   var stream1 = T.stream('statuses/filter', {
-    track: ['deadmau5']
+    track: ['kardashian']
   });
   var stream2 = T2.stream('statuses/filter', {
-    track: ['assange', 'snowden']
+    track: ['syria']
   });
 
   io.sockets.on('connection', function(socket) {
@@ -97,8 +101,6 @@ function socketStreamSetup() {
       console.log("SERVING page ID " + msg.pageId + " to client");
       console.log("serving app");
       stream1.on('tweet', function(tweet) {
-				// emit notification
-				notification();
         // send tweet to client
         socket.emit('tweetFeed1', tweet);
         // update concordance
@@ -106,8 +108,6 @@ function socketStreamSetup() {
       });
 
       stream2.on('tweet', function(tweet) {
-				// emit notification
-				notification();
         // send tweet to client
         socket.emit('tweetFeed2', tweet);
         // update concordance
@@ -144,6 +144,32 @@ function emitDataInterval(delay) {
   }, delay);
 }
 
+function eSpeak(text) {
+  // talk only when not currently talking, avoid overlaping
+  if (!talking) {
+    talking = true;
+    lcd.print(text);
+    // say -v Samantha -r 2000 "Hello I like to talk super fast"
+    var cmdText = 'echo "' + text + '" | festival --tts';
+    cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
+    console.log('stdout: ' + stdout);
+    console.log('stderr: ' + stderr);
+    console.log("voice ON");
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    }
+    });
+    cmd.on('exit', function (code) {
+	console.log("voice OFF");
+      talking = false;
+    });
+  }
+}
+
+// function eSpeak(text) {
+//   child_process.spawn('espeak "' + text + '"', [args], [options])
+// }
+
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
 function updateWordConcordance(string, group) {
@@ -158,6 +184,7 @@ function updateWordConcordance(string, group) {
     .toLowerCase();
   var tokens = parsedString.split(" ");
   buffer.push(parsedString); // push to strings
+  eSpeak(parsedString);
   for (var i = 0; i < tokens.length; i++) {
     var word = tokens[i];
     //if its a new word:
@@ -173,6 +200,12 @@ function updateWordConcordance(string, group) {
     }
   }
 }
+ 
+// If ctrl+c is hit, free resources and exit. 
+process.on('SIGINT', function () {
+  lcd.close();
+  process.exit();
+});
 
 // use sparangly on large datasets
 function sortTokens(group) {
@@ -222,14 +255,6 @@ function calculateTfIdf(group) {
   }
 }
 
-// for concept net, UNUSED
-function conceptNet(word) {
-  var client = request.createClient('http://api.conceptnet.io/c/en/');
-  client.get(word, function(err, res, body) {
-    return body;
-  });
-}
-
 function printerPrint(string) {
   serialPort.on('open', function() {
     var printer = new Printer(serialPort);
@@ -248,52 +273,10 @@ function printerPrint(string) {
   });
 }
 
-function notification() {
-	glitchTune(1);
-	led.writeSync(1);
-}
-
-// turn off all signals every 250ms
-setInterval(function() {
-	glitchTune(0);
-	led.writeSync(0);
-}, 250);
-
-var intervals = [];
-function glitchTune(state) {
-	if (state == 1) {
-		intervals[0] = setInterval(function() {
-			buzz(1);
-		}, 0.125);
-
-		intervals[1] = setInterval(function() {
-			buzz(1);
-		}, 0.512);
-
-		intervals[2] = setInterval(function() {
-			buzz(1);
-		}, 0.536);
-
-		intervals[3] = setInterval(function() {
-			buzz(0);
-		}, 0.256);
-
-		intervals[4] = setInterval(function() {
-			buzz(0);
-		}, 0.768);
-
-		intervals[5] = setInterval(function() {
-			buzz(0);
-		}, 2.024);
-	}
-
-	if (state == 0) {
-		for (i in intervals) {
-			clearInterval(intervals[i]);
-		}
-	}
-
-	function buzz(state) {
-		buzzer.writeSync(state);
-	}
+// for concept net, UNUSED
+function conceptNet(word) {
+  var client = request.createClient('http://api.conceptnet.io/c/en/');
+  client.get(word, function(err, res, body) {
+    return body;
+  });
 }
