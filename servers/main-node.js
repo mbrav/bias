@@ -21,29 +21,10 @@ io.sockets.on( "connection", function ( node ) {
   node.on( "tokens2", function (tokens) {
   });
   node.on( "txtBuffer1", function (buffer) {
-    console.log(buffer);
-    printerPrint(buffer[0]);
+    console.log("PRINTING: ", buffer[0]);
+    lcd.print(buffer[0]);
   });
   node.on( "txtBuffer2", function (buffer) {
     console.log(buffer);
   });
 });
-
-function printerPrint(string) {
-  serialPort.on('open', function() {
-    var printer = new Printer(serialPort);
-    console.log("PRINTING?");
-    printer.on('ready', function() {
-      printer
-        .indent(10)
-        .horizontalLine(16)
-        .bold(true)
-        .indent(10)
-        .printLine(string) // print passed string
-        .print(function() {
-          console.log('done');
-          process.exit();
-        });
-    });
-  });
-}
