@@ -30,7 +30,7 @@ io.sockets.on( "connection", function ( node ) {
 });
 
 setInterval(function() {
-  printerPrint("HI" + MAth.random());
+  printerPrint("HI" + Math.random());
 }, 5000);
 
 function printerPrint(string) {
