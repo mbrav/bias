@@ -13,6 +13,7 @@ serialPort = new SerialPort('/dev/serial0', {
   baudrate: 19200
 }),
 Printer = require('thermalprinter');
+var printer = new Printer(serialPort);
 
 io.sockets.on( "connection", function ( node ) {
   console.log("SOCKET CONNECTED");
@@ -22,9 +23,29 @@ io.sockets.on( "connection", function ( node ) {
   });
   node.on( "txtBuffer1", function (buffer) {
     console.log("PRINTING: ", buffer[0]);
-    lcd.print(buffer[0]);
   });
   node.on( "txtBuffer2", function (buffer) {
     console.log(buffer);
   });
 });
+
+setInterval(function() {
+  printerPrint("HI" + MAth.random());
+}, 5000);
+
+function printerPrint(string) {
+  serialPort.on('open', function() {
+    printer.on('ready', function() {
+      printer
+        .indent(10)
+        .horizontalLine(16)
+        .bold(true)
+        .indent(10)
+        .printLine(string) // print passed string
+        .print(function() {
+          console.log('done');
+          process.exit();
+        });
+    });
+  });
+}
