@@ -9,7 +9,7 @@ var io = require( 'socket.io' ).listen( server );
 
 var SerialPort = require('serialport'),
 //serialPort = new SerialPort('/dev/ttyUSB0', {
-serialPort = new SerialPort('/dev/serial0', {
+serialPort = new SerialPort('/dev/ttyS0', {
   baudrate: 19200
 }),
 Printer = require('thermalprinter');
