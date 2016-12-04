@@ -32,6 +32,7 @@ io.sockets.on( "connection", function ( node ) {
 function printerPrint(string) {
   serialPort.on('open', function() {
     var printer = new Printer(serialPort);
+    console.log("PRINTING?");
     printer.on('ready', function() {
       printer
         .indent(10)

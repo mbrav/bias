@@ -117,10 +117,8 @@ function emitDataInterval(delay) {
     trimData(analysisGroups[1]);
     trimData(analysisGroups[2]);
 
-    console.log("Tokens1 lenght: " + analysisGroups[1].tokens.length);
-    console.log("Tokens2 lenght: " + analysisGroups[2].tokens.length);
-
-    console.log(analysisGroups[1]);
+    console.log("Tokens1 length: " + analysisGroups[1].tokens.length);
+    console.log("Tokens2 length: " + analysisGroups[2].tokens.length);
 
   }, delay);
 }
