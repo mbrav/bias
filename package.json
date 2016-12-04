@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.14.0",
+    "lcd": "^1.1.4",
     "natural": "^0.4.0",
     "request-json": "^0.6.1",
     "serialport": "^4.0.6",

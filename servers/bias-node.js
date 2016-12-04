@@ -7,9 +7,9 @@ var natural = require('natural');
 
 var masterPort = 3000;
 var ioc = require('socket.io-client');
-var client = ioc.connect("http://localhost:" + masterPort);
+var client = ioc.connect("http://bias-net1.local:3000");
 
-client.once("connect", function() {
+client.on("connect", function() {
   console.log('SLAVE SERVER STARTED');
   console.log('Client: Connected to port ' + masterPort);
 
@@ -21,15 +21,15 @@ var childProcess = require('child_process'),
   cmd;
 var talking = false;
 
-// // for lcd
-// var Lcd = require('lcd'),
-//   lcd = new Lcd({
-//     rs: 12,
-//     e: 21,
-//     data: [5, 6, 17, 18],
-//     cols: 16,
-//     rows: 2
-//   });
+// for lcd
+var Lcd = require('lcd'),
+  lcd = new Lcd({
+    rs: 12,
+    e: 21,
+    data: [5, 6, 17, 18],
+    cols: 16,
+    rows: 2
+  });
 
 // stat sotrage
 var analysisGroups = {
