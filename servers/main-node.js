@@ -21,7 +21,7 @@ io.sockets.on( "connection", function ( node ) {
   node.on( "tokens2", function (tokens) {
   });
   node.on( "txtBuffer1", function (buffer) {
-    console.log("PRINTING: ", buffer[0]);
+    printerPrint(buffer[0]);
   });
   node.on( "txtBuffer2", function (buffer) {
     console.log(buffer);
@@ -33,6 +33,7 @@ setInterval(function() {
 }, 5000);
 
 function printerPrint(string) {
+  console.log("PRINTING: ", string);
   serialPort.on('open', function() {
     var printer = new Printer(serialPort);
     printer.on('ready', function() {
