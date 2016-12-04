@@ -221,8 +221,8 @@ function sortTokens(group) {
 }
 
 function trimData(group) {
-  group.tokens = group.tokens.slice(0, 1000);
-  group.txtBuffer = group.txtBuffer.slice(0, 1000);
+  group.tokens = group.tokens.slice(0, 100);
+  group.txtBuffer = group.txtBuffer.slice(0, 100);
 }
 
 function calculateTfIdf(group) {
