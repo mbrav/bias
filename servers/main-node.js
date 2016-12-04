@@ -19,6 +19,7 @@ io.sockets.on("connection", function(node) {
   node.on("tokens1", function(tokens) {});
   node.on("tokens2", function(tokens) {});
   node.on("txtBuffer1", function(buffer) {
+    console.log("printing" + buffer[0]);
     printerPrint(buffer[0]);
   });
   node.on("txtBuffer2", function(buffer) {});
