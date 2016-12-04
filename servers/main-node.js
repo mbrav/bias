@@ -21,16 +21,12 @@ io.sockets.on( "connection", function ( node ) {
   node.on( "tokens2", function (tokens) {
   });
   node.on( "txtBuffer1", function (buffer) {
-    console.log(buffer[0]);
-    printerPrint(buffer[0]);
+    printerPrint("test");
   });
   node.on( "txtBuffer2", function (buffer) {
   });
 });
 
-setInterval(function() {
-  printerPrint("HI");
-}, 5000);
 
 function printerPrint(string) {
   console.log("PRINTER printing: ", string);
