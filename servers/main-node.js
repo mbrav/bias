@@ -13,7 +13,6 @@ serialPort = new SerialPort('/dev/serial0', {
   baudrate: 19200
 }),
 Printer = require('thermalprinter');
-var printer = new Printer(serialPort);
 
 io.sockets.on( "connection", function ( node ) {
   console.log("SOCKET CONNECTED");
@@ -35,6 +34,7 @@ setInterval(function() {
 
 function printerPrint(string) {
   serialPort.on('open', function() {
+    var printer = new Printer(serialPort);
     printer.on('ready', function() {
       printer
         .indent(10)
