@@ -19,7 +19,7 @@ io.sockets.on("connection", function(node) {
   node.on("tokens1", function(tokens) {});
   node.on("tokens2", function(tokens) {});
   node.on("txtBuffer1", function(buffer) {
-    // printerPrint("test");
+    printerPrint(buffer[0]);
   });
   node.on("txtBuffer2", function(buffer) {});
 });
@@ -47,8 +47,6 @@ io.sockets.on("connection", function(node) {
 //   });
 // }
 
-printerPrint("TEEEST-ic..");
-
 function printerPrint(string) {
   serialPort.on('open', function() {
     var printer = new Printer(serialPort);
@@ -67,7 +65,6 @@ function printerPrint(string) {
         //.printImage(path)
         .print(function() {
           console.log('done');
-          process.exit();
         });
     });
   });
