@@ -10,20 +10,27 @@ var natural = require('natural');
 var io = require('socket.io')(serv, {});
 
 var SerialPort = require('serialport'),
-//serialPort = new SerialPort('/dev/ttyUSB0', {
-serialPort = new SerialPort('/dev/serial0', {
-  baudrate: 19200
-}),
-Printer = require('thermalprinter');
+  //serialPort = new SerialPort('/dev/ttyUSB0', {
+  serialPort = new SerialPort('/dev/serial0', {
+    baudrate: 19200
+  }),
+  Printer = require('thermalprinter');
 
 // for running terminal commands
-var childProcess = require('child_process'), cmd;
+var childProcess = require('child_process'),
+  cmd;
 var talking = false;
 
-// for lcd 
+// for lcd
 var Lcd = require('lcd'),
-lcd = new Lcd({rs: 12, e: 21, data: [5, 6, 17, 18], cols: 16, rows: 2});
- 
+  lcd = new Lcd({
+    rs: 12,
+    e: 21,
+    data: [5, 6, 17, 18],
+    cols: 16,
+    rows: 2
+  });
+
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/client/index.html');
 });
@@ -40,12 +47,10 @@ var clientsOnline = 0;
 // stat sotrage
 var analysisGroups = {
   1: {
-    concordance: {},
     tokens: [],
     txtBuffer: []
   },
   2: {
-    concordance: {},
     tokens: [],
     txtBuffer: []
   }
@@ -87,37 +92,18 @@ function socketStreamSetup() {
     track: ['syria']
   });
 
-  io.sockets.on('connection', function(socket) {
-    // var concept = conceptNet("omg");
-    clientsOnline++;
+  stream1.on('tweet', function(tweet) {
+    // send tweet to client
+    io.emit('tweetFeed1', tweet);
+    // update concordance
+    updateWordConcordance(tweet.text, analysisGroups[1]);
+  });
 
-    // setup the client once his settings are received
-    console.log("CLIENT connected");
-
-    socket.on('init', function(msg) {
-      console.log("INIT client message");
-      console.log(msg);
-
-      console.log("SERVING page ID " + msg.pageId + " to client");
-      console.log("serving app");
-      stream1.on('tweet', function(tweet) {
-        // send tweet to client
-        socket.emit('tweetFeed1', tweet);
-        // update concordance
-        updateWordConcordance(tweet.text, analysisGroups[1]);
-      });
-
-      stream2.on('tweet', function(tweet) {
-        // send tweet to client
-        socket.emit('tweetFeed2', tweet);
-        // update concordance
-        updateWordConcordance(tweet.text, analysisGroups[2]);
-      });
-    });
-
-    socket.on('disconnect', function() {
-      clientsOnline--;
-    });
+  stream2.on('tweet', function(tweet) {
+    // send tweet to client
+    io.emit('tweetFeed2', tweet);
+    // update concordance
+    updateWordConcordance(tweet.text, analysisGroups[2]);
   });
 }
 
@@ -134,12 +120,14 @@ function emitDataInterval(delay) {
     sortTokens(analysisGroups[2]);
 
     // send tokens to client
-    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 100));
-    io.emit('tokens2', analysisGroups[2].tokens.slice(0, 100));
+    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
+    io.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
 
     // trim data
     trimData(analysisGroups[1]);
     trimData(analysisGroups[2]);
+
+    console.log("Tokens lenght: " + analysisGroups[2].tokens.length);
 
   }, delay);
 }
@@ -152,15 +140,15 @@ function eSpeak(text) {
     // say -v Samantha -r 2000 "Hello I like to talk super fast"
     var cmdText = 'echo "' + text + '" | festival --tts';
     cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
-    console.log('stdout: ' + stdout);
-    console.log('stderr: ' + stderr);
-    console.log("voice ON");
-    if (error !== null) {
-      console.log('exec error: ' + error);
-    }
+      console.log('stdout: ' + stdout);
+      console.log('stderr: ' + stderr);
+      console.log("voice ON");
+      if (error !== null) {
+        console.log('exec error: ' + error);
+      }
     });
-    cmd.on('exit', function (code) {
-	console.log("voice OFF");
+    cmd.on('exit', function(code) {
+      console.log("voice OFF");
       talking = false;
     });
   }
@@ -173,48 +161,61 @@ function eSpeak(text) {
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
 function updateWordConcordance(string, group) {
-  var concord = group.concordance;
-  var tokens = group.tokens;
-  var buffer = group.txtBuffer;
-
   var parsedString = string.replace(/\s+/g, " ")
     .replace(/([^a-zA-Z ]|http|https)/g, "") // remove symbols and links
     .replace("RT", "") // exclude retweet signs
+    .replace(" ", "") // exclude spaces signs
     .replace(/\b(@)\w\w+/g, "1917!!") // exclude usernames
     .toLowerCase();
-  var tokens = parsedString.split(" ");
-  buffer.push(parsedString); // push to strings
+  var words = parsedString.split(" ");
+  group.txtBuffer.push(parsedString); // push to strings
   eSpeak(parsedString);
-  for (var i = 0; i < tokens.length; i++) {
-    var word = tokens[i];
+  for (var i = 0; i < words.length; i++) {
+    var word = words[i];
+    // console.log(word, group.tokens[tokens.indexOf(word)] tokens.indexOf(word));
     //if its a new word:
-    if (concord[word] === undefined) {
-      //create the key (the word) and value (1) in the concordance object:
-      concord[word] = 1;
+    if (checkForWord(group.tokens, word) == false) {
       group.tokens.push({
         word: word,
         count: 1
-      }); //if we have a new word, add it to the array.
+      });
     } else { // if we've seen this word before, increment the value:
-      concord[word]++;
+      var wordIndex = getIndexOfWord(group.tokens, word);
+      group.tokens[wordIndex].count++;
+      // console.log("Word: " + group.tokens[wordIndex].word + ", count: " + group.tokens[wordIndex].count);
     }
   }
 }
- 
-// If ctrl+c is hit, free resources and exit. 
-process.on('SIGINT', function () {
+
+// If ctrl+c is hit, free resources and exit.
+process.on('SIGINT', function() {
   lcd.close();
   process.exit();
 });
 
+function checkForWord(array, word) {
+  var wordFound = false;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].word == word) {
+      wordFound = true;
+    }
+  }
+  return wordFound;
+}
+
+function getIndexOfWord(array, word) {
+  var index = 0;
+  for (var i = 0; i < array.length; i++) {
+    if (array[i].word == word) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
 // use sparangly on large datasets
 function sortTokens(group) {
-  var concord = group.concordance;
-
-  // update the tokened words with their count
-  for (var i in group.tokens) {
-    group.tokens[i].count = concord[group.tokens[i].word];
-  }
 
   // sort tokens by count
   // group.tokens.sort(function(a, b) {
@@ -228,26 +229,23 @@ function sortTokens(group) {
 }
 
 function trimData(group) {
-  group.tokens.slice(0, 200);
-  group.txtBuffer.slice(0, 200);
+  group.tokens = group.tokens.slice(0, 1000);
+  group.txtBuffer = group.txtBuffer.slice(0, 1000);
 }
 
 function calculateTfIdf(group) {
   tfidf = new natural.TfIdf();
-  // var concord = group.concordance;
-  var tokens = group.tokens;
-  var buffer = group.txtBuffer;
 
   // add all sentences to the tfidf calculator
-  for (var i in buffer) {
-    tfidf.addDocument(buffer[i]);
+  for (var i in group.txtBuffer) {
+    tfidf.addDocument(group.txtBuffer[i]);
   }
 
   // go throught all words and average their tf-idf
-  for (var i in tokens) {
+  for (var i in group.tokens) {
     var avg = 0.0;
     var count = 0;
-    tfidf.tfidfs(tokens[i].word, function(i, measure) {
+    tfidf.tfidfs(group.tokens[i].word, function(i, measure) {
       avg += measure;
       count++;
     });
