@@ -24,29 +24,6 @@ io.sockets.on("connection", function(node) {
   node.on("txtBuffer2", function(buffer) {});
 });
 
-
-// function printerPrint(string) {
-//   console.log("PRINTER printing: ", string);
-//   serialPort.on('open', function() {
-//     console.log("PRINTER open");
-//     var printer = new Printer(serialPort);
-//     printer.on('ready', function() {
-//       onsole.log("PRINTER ready");
-//       console.log("PRINTING: ", string);
-//       printer
-//         .indent(10)
-//         .horizontalLine(16)
-//         .bold(true)
-//         .indent(10)
-//         .printLine(string) // print passed string
-//         .print(function() {
-//           console.log('done');
-//           process.exit();
-//         });
-//     });
-//   });
-// }
-
 function printerPrint(string) {
   serialPort.on('open', function() {
     var printer = new Printer(serialPort);
@@ -61,11 +38,7 @@ function printerPrint(string) {
         .inverse(true)
         .big(true)
         .right()
-        .printLine(string)
-        //.printImage(path)
-        .print(function() {
-          console.log('done');
-        });
+        .printLine(string);
     });
   });
 }
