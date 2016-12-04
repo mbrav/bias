@@ -47,24 +47,28 @@ io.sockets.on("connection", function(node) {
 //   });
 // }
 
-serialPort.on('open', function() {
-  var printer = new Printer(serialPort);
-  printer.on('ready', function() {
-    printer
-      .indent(10)
-      .horizontalLine(16)
-      .bold(true)
-      .indent(10)
-      .printLine('whatsaup!')
-      .bold(false)
-      .inverse(true)
-      .big(true)
-      .right()
-      .printLine('second line')
-      //.printImage(path)
-      .print(function() {
-        console.log('done');
-        process.exit();
-      });
+printerPrint("TEEEST-ic..");
+
+function printerPrint(string) {
+  serialPort.on('open', function() {
+    var printer = new Printer(serialPort);
+    printer.on('ready', function() {
+      printer
+        .indent(10)
+        .horizontalLine(16)
+        .bold(true)
+        .indent(10)
+        .printLine('whatsaup!')
+        .bold(false)
+        .inverse(true)
+        .big(true)
+        .right()
+        .printLine(string)
+        //.printImage(path)
+        .print(function() {
+          console.log('done');
+          process.exit();
+        });
+    });
   });
-});
+}
