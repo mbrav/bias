@@ -1,48 +1,35 @@
 //get-scraped
 //created by Michael Braverman on November 12, 2016
 
-var express = require('express');
-var app = express();
-var serv = require('http').Server(app);
 var request = require('request-json');
 var Twit = require('twit');
 var natural = require('natural');
-var io = require('socket.io')(serv, {});
 
-var SerialPort = require('serialport'),
-  //serialPort = new SerialPort('/dev/ttyUSB0', {
-  serialPort = new SerialPort('/dev/serial0', {
-    baudrate: 19200
-  }),
-  Printer = require('thermalprinter');
+var masterPort = 3000;
+var ioc = require('socket.io-client');
+var client = ioc.connect("http://localhost:" + masterPort);
+
+client.once("connect", function() {
+  console.log('SLAVE SERVER STARTED');
+  console.log('Client: Connected to port ' + masterPort);
+
+  client.emit("msg", "Hello World");
+});
 
 // for running terminal commands
 var childProcess = require('child_process'),
   cmd;
 var talking = false;
 
-// for lcd
-var Lcd = require('lcd'),
-  lcd = new Lcd({
-    rs: 12,
-    e: 21,
-    data: [5, 6, 17, 18],
-    cols: 16,
-    rows: 2
-  });
-
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/client/index.html');
-});
-
-// make everything in the /client folder available to the user
-app.use(express.static('client'));
-
-// socket.io connection port
-serv.listen(2000);
-console.log('SERVER STARTED');
-
-var clientsOnline = 0;
+// // for lcd
+// var Lcd = require('lcd'),
+//   lcd = new Lcd({
+//     rs: 12,
+//     e: 21,
+//     data: [5, 6, 17, 18],
+//     cols: 16,
+//     rows: 2
+//   });
 
 // stat sotrage
 var analysisGroups = {
@@ -62,7 +49,7 @@ function init() {
   // setup socket and twitter stream
   socketStreamSetup();
   // set an interval at which data is processed and emited
-  emitDataInterval(30000);
+  emitDataInterval(10000);
 }
 
 function socketStreamSetup() {
@@ -94,14 +81,14 @@ function socketStreamSetup() {
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
-    io.emit('tweetFeed1', tweet);
+    client.emit('tweetFeed1', tweet);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
 
   stream2.on('tweet', function(tweet) {
     // send tweet to client
-    io.emit('tweetFeed2', tweet);
+    client.emit('tweetFeed2', tweet);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[2]);
   });
@@ -120,14 +107,15 @@ function emitDataInterval(delay) {
     sortTokens(analysisGroups[2]);
 
     // send tokens to client
-    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
-    io.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
+    client.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
+    client.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
 
     // trim data
     trimData(analysisGroups[1]);
     trimData(analysisGroups[2]);
 
-    console.log("Tokens lenght: " + analysisGroups[2].tokens.length);
+    console.log("Tokens1 lenght: " + analysisGroups[1].tokens.length);
+    console.log("Tokens2 lenght: " + analysisGroups[2].tokens.length);
 
   }, delay);
 }
@@ -137,7 +125,6 @@ function eSpeak(text) {
   if (!talking) {
     talking = true;
     lcd.print(text);
-    // say -v Samantha -r 2000 "Hello I like to talk super fast"
     var cmdText = 'echo "' + text + '" | festival --tts';
     cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
       console.log('stdout: ' + stdout);
@@ -251,24 +238,6 @@ function calculateTfIdf(group) {
     });
     group.tokens[i].avgIdf = avg / count;
   }
-}
-
-function printerPrint(string) {
-  serialPort.on('open', function() {
-    var printer = new Printer(serialPort);
-    printer.on('ready', function() {
-      printer
-        .indent(10)
-        .horizontalLine(16)
-        .bold(true)
-        .indent(10)
-        .printLine(string) // print passed string
-        .print(function() {
-          console.log('done');
-          process.exit();
-        });
-    });
-  });
 }
 
 // for concept net, UNUSED
