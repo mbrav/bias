@@ -110,6 +110,9 @@ function emitDataInterval(delay) {
     master.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
     master.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
 
+    master.emit('txtBuffer1', analysisGroups[1].txtBuffer.slice(0, 30));
+    master.emit('txtBuffer2', analysisGroups[2].txtBuffer.slice(0, 30));
+
     // trim data
     trimData(analysisGroups[1]);
     trimData(analysisGroups[2]);

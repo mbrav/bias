@@ -16,12 +16,16 @@ Printer = require('thermalprinter');
 
 io.sockets.on( "connection", function ( node ) {
   console.log("SOCKET CONNECTED");
-  node.on( "tokens1", function (data) {
-    console.log(data);
-    // printerPrint(data.txtBuffer[0])
+  node.on( "tokens1", function (tokens) {
   });
-  node.on( "tokens2", function (data) {
-    console.log(data);
+  node.on( "tokens2", function (tokens) {
+  });
+  node.on( "txtBuffer1", function (buffer) {
+    console.log(buffer);
+    printerPrint(buffer[0]);
+  });
+  node.on( "txtBuffer2", function (buffer) {
+    console.log(buffer);
   });
 });
 
