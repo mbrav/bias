@@ -155,7 +155,7 @@ function updateWordConcordance(string, group) {
     .replace(/\b(@)\w\w+/g, "1917!!") // exclude usernames
     .toLowerCase();
   var words = parsedString.split(" ");
-  group.txtBuffer.push(parsedString); // push to strings
+  group.txtBuffer.unshift(parsedString); // push to strings
   eSpeak(parsedString);
   for (var i = 0; i < words.length; i++) {
     var word = words[i];

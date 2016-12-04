@@ -7,17 +7,18 @@ var server = require( 'http' ).createServer( ).listen( port, function () {
 } );
 var io = require( 'socket.io' ).listen( server );
 
-// var SerialPort = require('serialport'),
-// //serialPort = new SerialPort('/dev/ttyUSB0', {
-// serialPort = new SerialPort('/dev/serial0', {
-//   baudrate: 19200
-// }),
-// Printer = require('thermalprinter');
+var SerialPort = require('serialport'),
+//serialPort = new SerialPort('/dev/ttyUSB0', {
+serialPort = new SerialPort('/dev/serial0', {
+  baudrate: 19200
+}),
+Printer = require('thermalprinter');
 
 io.sockets.on( "connection", function ( node ) {
   console.log("SOCKET CONNECTED");
   node.on( "tokens1", function (data) {
     console.log(data);
+    printerPrint(data.txtBuffer[0])
   });
   node.on( "tokens2", function (data) {
     console.log(data);
