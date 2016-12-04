@@ -14,12 +14,12 @@ var io = require( 'socket.io' ).listen( server );
 // }),
 // Printer = require('thermalprinter');
 
-io.sockets.on( "connection", function ( socket ) {
+io.sockets.on( "connection", function ( node ) {
   console.log("SOCKET CONNECTED");
-  socket.on( "tokens1", function (data) {
+  node.on( "tokens1", function (data) {
     console.log(data);
   });
-  socket.on( "tokens2", function (data) {
+  node.on( "tokens2", function (data) {
     console.log(data);
   });
 });

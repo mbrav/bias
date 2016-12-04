@@ -7,13 +7,13 @@ var natural = require('natural');
 
 var masterPort = 3000;
 var ioc = require('socket.io-client');
-var client = ioc.connect("http://bias-net1.local:3000");
+var master = ioc.connect("http://bias-net1.local:" + masterPort);
 
-client.on("connect", function() {
+master.on("connect", function() {
   console.log('SLAVE SERVER STARTED');
   console.log('Client: Connected to port ' + masterPort);
 
-  client.emit("msg", "Hello World");
+  master.emit("msg", "Hello World");
 });
 
 // for running terminal commands
@@ -81,14 +81,14 @@ function socketStreamSetup() {
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
-    client.emit('tweetFeed1', tweet);
+    master.emit('tweetFeed1', tweet);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
 
   stream2.on('tweet', function(tweet) {
     // send tweet to client
-    client.emit('tweetFeed2', tweet);
+    master.emit('tweetFeed2', tweet);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[2]);
   });
@@ -107,8 +107,8 @@ function emitDataInterval(delay) {
     sortTokens(analysisGroups[2]);
 
     // send tokens to client
-    client.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
-    client.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
+    master.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
+    master.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
 
     // trim data
     trimData(analysisGroups[1]);
