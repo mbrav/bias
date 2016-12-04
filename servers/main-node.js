@@ -33,10 +33,13 @@ setInterval(function() {
 }, 5000);
 
 function printerPrint(string) {
-  console.log("PRINTING: ", string);
+  console.log("PRINTER printing: ", string);
   serialPort.on('open', function() {
+    console.log("PRINTER open");
     var printer = new Printer(serialPort);
     printer.on('ready', function() {
+      onsole.log("PRINTER ready");
+      console.log("PRINTING: ", string);
       printer
         .indent(10)
         .horizontalLine(16)
