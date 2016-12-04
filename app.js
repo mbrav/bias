@@ -24,8 +24,6 @@ app.use(express.static('client'));
 serv.listen(2000);
 console.log('SERVER STARTED');
 
-var clientsOnline = 0;
-
 // stat sotrage
 var analysisGroups = {
   1: {
@@ -87,39 +85,6 @@ function socketStreamSetup() {
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[2]);
   });
-
-  // io.sockets.on('connection', function(socket) {
-  //   // var concept = conceptNet("omg");
-  //   clientsOnline++;
-  //
-  //   // setup the client once his settings are received
-  //   console.log("CLIENT connected");
-  //
-  //   socket.on('init', function(msg) {
-  //     console.log("INIT client message");
-  //     console.log(msg);
-  //
-  //     console.log("SERVING page ID " + msg.pageId + " to client");
-  //     console.log("serving app");
-  //     stream1.on('tweet', function(tweet) {
-  //       // send tweet to client
-  //       socket.emit('tweetFeed1', tweet);
-  //       // update concordance
-  //       updateWordConcordance(tweet.text, analysisGroups[1]);
-  //     });
-  //
-  //     stream2.on('tweet', function(tweet) {
-  //       // send tweet to client
-  //       socket.emit('tweetFeed2', tweet);
-  //       // update concordance
-  //       updateWordConcordance(tweet.text, analysisGroups[2]);
-  //     });
-  //   });
-  //
-  //   socket.on('disconnect', function() {
-  //     clientsOnline--;
-  //   });
-  // });
 }
 
 function emitDataInterval(delay) {
@@ -142,7 +107,7 @@ function emitDataInterval(delay) {
     trimData(analysisGroups[1]);
     trimData(analysisGroups[2]);
 
-    console.log(analysisGroups[2].tokens);
+    console.log("Tokens lenght: " + analysisGroups[2].tokens.length);
 
   }, delay);
 }
@@ -175,8 +140,6 @@ function eSpeak(text) {
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
 function updateWordConcordance(string, group) {
-  var tokens = group.tokens;
-  var buffer = group.txtBuffer;
 
   var parsedString = string.replace(/\s+/g, " ")
     .replace(/([^a-zA-Z ]|http|https)/g, "") // remove symbols and links
@@ -185,7 +148,7 @@ function updateWordConcordance(string, group) {
     .replace(/\b(@)\w\w+/g, "1917!!") // exclude usernames
     .toLowerCase();
   var words = parsedString.split(" ");
-  buffer.push(parsedString); // push to strings
+  group.txtBuffer.push(parsedString); // push to strings
   eSpeak(parsedString);
   for (var i = 0; i < words.length; i++) {
     var word = words[i];
@@ -240,25 +203,23 @@ function sortTokens(group) {
 }
 
 function trimData(group) {
-  // group.tokens.slice(0, 200);
-  // group.txtBuffer.slice(0, 200);
+  group.tokens = group.tokens.slice(0, 1000);
+  group.txtBuffer = group.txtBuffer.slice(0, 1000);
 }
 
 function calculateTfIdf(group) {
   tfidf = new natural.TfIdf();
-  var tokens = group.tokens;
-  var buffer = group.txtBuffer;
 
   // add all sentences to the tfidf calculator
-  for (var i in buffer) {
-    tfidf.addDocument(buffer[i]);
+  for (var i in group.txtBuffer) {
+    tfidf.addDocument(group.txtBuffer[i]);
   }
 
   // go throught all words and average their tf-idf
-  for (var i in tokens) {
+  for (var i in group.tokens) {
     var avg = 0.0;
     var count = 0;
-    tfidf.tfidfs(tokens[i].word, function(i, measure) {
+    tfidf.tfidfs(group.tokens[i].word, function(i, measure) {
       avg += measure;
       count++;
     });
