@@ -13,6 +13,9 @@ var io = require('socket.io')(serv, {});
 var childProcess = require('child_process'), cmd;
 var talking = false;
 
+// the id of the node
+var nodeId = 1;
+
 app.get('/', function(req, res) {
   res.sendFile(__dirname + '/client/index.html');
 });
@@ -29,12 +32,94 @@ var analysisGroups = {
   1: {
     tokens: [],
     txtBuffer: []
-  },
-  2: {
-    tokens: [],
-    txtBuffer: []
   }
 }
+
+var keys = [
+  {
+    consumer_key: 'sidVniQDxPoo3yaNs5pmivFBo',
+    consumer_secret: '88mHZa7CML1U2tarjGwPGWg3Ulm8kjLtFrM0iGKY0BQT1f0gDp',
+    access_token: '237022647-BsVts2RPYaPg6iT9HS2vkaGZk54I4Nkq5QDr4tjT',
+    access_token_secret: '33lZyypJ2UKlSrrLc1PnS8UY8FUrupsUohLuNBbfe35Rc',
+  },
+  {
+    consumer_key: '8hGzNWjVnuuaulqsq1jLg8Odq',
+    consumer_secret: 'NmPpZ3vaqJyDlGgdxPPeIt4wH58q9SuFB2Kmk4bjPy3VYYLrhj',
+    access_token: '237022647-jYWDdY4aLkRfDeH8wStaCTDtfMf1ibccDaL3HH2y',
+    access_token_secret: 'GfDxBCaYKGqAm1EEpt3P8s4TG79Pq0VXEW8LMB0JKmHE1',
+  },
+  {
+    consumer_key: 'aBI8PT0zVpFihiymYOsHERyTv',
+    consumer_secret: '7Bug7h4LyO5YTFZrv51GwFRIv3k1kciyEstbL54tslYjTLOKg8',
+    access_token: '896480534-FG5Lr9MpefI3mPUxBMc2B6rrbuQzJ2xYoF0sq9wP',
+    access_token_secret: '9L5Rl2oOGb3ll7kll2xIV997vhVlFojS8eesOfxF4356k',
+  },
+  {
+    consumer_key: 'xhMZCX38cmgTTcFTdfPL2SlS8',
+    consumer_secret: 'ZNom2ash90VOtRe22b9BjgjW2krS67pxgj5722Mekw4weZVMhj',
+    access_token: '896480534-QcW66OnJa8qu21LVUEGWAclmoQcODqROMk3sPVG0',
+    access_token_secret: 'q75kz5loG1ya60ZIt8LI4tUSwRHjezwchCLOfk4wOklvR',
+  }
+]
+
+var topics = [
+  {
+    topic: 'politics',
+    tokens: [
+      'trump',
+      'obama',
+      'clinton',
+      'putin',
+      'assad',
+      'merkel',
+      'jinping',
+      'bush',
+    ]
+  },
+  {
+    topic: 'science',
+    tokens: [
+      'climate',
+      'warming',
+      'particle',
+      'cern',
+      'solar',
+      'energy',
+    ]
+  },
+  {
+    topic: 'ideology',
+    tokens: [
+      'communism',
+      'anarchy',
+      'capitalism',
+      'collectivism',
+      'conservatism',
+      'extremism',
+      'fanatic',
+      'fascism',
+      'feminism',
+      'globalism',
+      'individualism',
+      'industrialism',
+      'intellectualism',
+      'liberalism',
+      'militarism',
+      'nationalism',
+      'socialism',
+      'utilitarianism',
+    ]
+  },
+  {
+    topic: 'celebreties',
+    tokens: [
+      'taylor swift',
+      'justin bieber',
+    ]
+  }
+];
+
+var topicId, tokenId;
 
 init();
 
@@ -48,43 +133,34 @@ function init() {
 function socketStreamSetup() {
   // primary API
   var T = new Twit({
-    consumer_key: 'sidVniQDxPoo3yaNs5pmivFBo',
-    consumer_secret: '88mHZa7CML1U2tarjGwPGWg3Ulm8kjLtFrM0iGKY0BQT1f0gDp',
-    access_token: '237022647-BsVts2RPYaPg6iT9HS2vkaGZk54I4Nkq5QDr4tjT',
-    access_token_secret: '33lZyypJ2UKlSrrLc1PnS8UY8FUrupsUohLuNBbfe35Rc',
+    consumer_key: keys[nodeId-1].consumer_key,
+    consumer_secret: keys[nodeId-1].consumer_secret,
+    access_token: keys[nodeId-1].access_token,
+    access_token_secret: keys[nodeId-1].access_token_secret,
     timeout_ms: 60 * 1000,
   });
 
-  // backup API's (a.k.a. fuck the system)
-  var T2 = new Twit({
-    consumer_key: '8hGzNWjVnuuaulqsq1jLg8Odq',
-    consumer_secret: 'NmPpZ3vaqJyDlGgdxPPeIt4wH58q9SuFB2Kmk4bjPy3VYYLrhj',
-    access_token: '237022647-jYWDdY4aLkRfDeH8wStaCTDtfMf1ibccDaL3HH2y',
-    access_token_secret: 'GfDxBCaYKGqAm1EEpt3P8s4TG79Pq0VXEW8LMB0JKmHE1',
-    timeout_ms: 60 * 1000, // optional HTTP request timeout to apply to all requests.
-  });
-
+  // randomize topic
+  randomizeTopic();
   // twitter streAMS
   var stream1 = T.stream('statuses/filter', {
-    track: ['snowden']
-  });
-  var stream2 = T2.stream('statuses/filter', {
-    track: ['syria']
+    track: topics[topicId].tokens[tokenId]
   });
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
+    console.log(tweet.text);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
+}
 
-  stream2.on('tweet', function(tweet) {
-    // send tweet to client
-    io.emit('tweetFeed2', tweet);
-    // update concordance
-    updateWordConcordance(tweet.text, analysisGroups[2]);
-  });
+function randomizeTopic() {
+  topicId = Math.round(Math.random() * topics.length);
+  tokenId = Math.round(Math.random() * topics[topicId].tokens.length);
+  console.log('IDs ', topicId, tokenId);
+  console.log("topic:", topics[topicId].topic, "token:" , topics[topicId].tokens[tokenId]);
 }
 
 function emitDataInterval(delay) {
@@ -93,49 +169,19 @@ function emitDataInterval(delay) {
 
     // calulate td-idf
     calculateTfIdf(analysisGroups[1]);
-    calculateTfIdf(analysisGroups[2]);
 
     // sort tokens
     sortTokens(analysisGroups[1]);
-    sortTokens(analysisGroups[2]);
 
     // send tokens to client
     io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
-    io.emit('tokens2', analysisGroups[2].tokens.slice(0, 30));
 
     // trim data
     trimData(analysisGroups[1]);
-    trimData(analysisGroups[2]);
-
-    console.log("Tokens lenght: " + analysisGroups[2].tokens.length);
 
   }, delay);
 }
 
-function eSpeak(text) {
-  // talk only when not currently talking, avoid overlaping
-  if (!talking) {
-    talking = true;
-    // say -v Samantha -r 2000 "Hello I like to talk super fast"
-    var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
-    cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
-    // console.log('stdout: ' + stdout);
-    // console.log('stderr: ' + stderr);
-    console.log("voice ON");
-    if (error !== null) {
-      console.log('exec error: ' + error);
-    }
-    });
-    cmd.on('exit', function (code) {
-      console.log("voice OFF");
-      talking = false;
-    });
-  }
-}
-
-// function eSpeak(text) {
-//   child_process.spawn('espeak "' + text + '"', [args], [options])
-// }
 
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
@@ -224,6 +270,25 @@ function calculateTfIdf(group) {
       count++;
     });
     group.tokens[i].avgIdf = avg / count;
+  }
+}
+
+function eSpeak(text) {
+  // talk only when not currently talking, avoid overlaping
+  if (!talking) {
+    talking = true;
+    // say -v Samantha -r 2000 "Hello I like to talk super fast"
+    var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
+    cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
+      console.log("voice ON");
+      if (error !== null) {
+        console.log('exec error: ' + error);
+      }
+    });
+    cmd.on('exit', function (code) {
+      console.log("voice OFF");
+      talking = false;
+    });
   }
 }
 
