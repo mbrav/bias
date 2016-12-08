@@ -9,6 +9,11 @@ var Twit = require('twit');
 var natural = require('natural');
 var io = require('socket.io')(serv, {});
 
+var watson = require('watson-developer-cloud');
+var alchemy_language = watson.alchemy_language({
+  api_key: '9bd879d2dfdcb2cde467aac82d9be5c70477f349'
+});
+
 // for running terminal commands
 var childProcess = require('child_process'), cmd;
 var talking = false;
@@ -124,6 +129,7 @@ var topicId, tokenId;
 init();
 
 function init() {
+  alchemyLanguage("All my endeavors to come to an understanding with Britain were wrecked by the determination of a small clique which, whether from motives of hate or for the sake of material gain, rejected every German proposal for an understanding due to their resolve, which they never concealed, to resort to war, whatever happened.But just as the appeal I made on September 1, 1939, proved to be in vain, this renewed appeal met with indignant rejection. The British and their Jewish capitalist backers could find no other explanation for this appeal, which I had made on humanitarian grounds, than the assumption of weakness on the part of Germany.");
   // setup socket and twitter stream
   socketStreamSetup();
   // set an interval at which data is processed and emited
@@ -181,7 +187,6 @@ function emitDataInterval(delay) {
 
   }, delay);
 }
-
 
 // Based on Bryan Ma's "Concordances / Word Counting"
 // https://github.com/whoisbma/Code-2-SP16/tree/master/week-06-concordance
@@ -290,6 +295,23 @@ function eSpeak(text) {
       talking = false;
     });
   }
+}
+
+// for AlchemyLanguage
+function alchemyLanguage(txt) {
+  var parameters = {
+    extract: 'entities,keywords,doc-sentiment',
+    sentiment: 1,
+    maxRetrieve: 1,
+    text: txt
+  };
+
+  alchemy_language.combined(parameters, function (err, response) {
+  if (err)
+    console.log('error:', err);
+  else
+    console.log(JSON.stringify(response, null, 2));
+  });
 }
 
 // for concept net, UNUSED

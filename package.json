@@ -20,6 +20,7 @@
     "natural": "^0.4.0",
     "request-json": "^0.6.1",
     "socket.io": "^1.5.1",
-    "twit": "^2.2.5"
+    "twit": "^2.2.5",
+    "watson-developer-cloud": "^2.13.1"
   }
 }
