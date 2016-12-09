@@ -15,6 +15,16 @@ var alchemy_language = watson.alchemy_language({
   api_key: '9bd879d2dfdcb2cde467aac82d9be5c70477f349'
 });
 
+// for lcd
+var Lcd = require('lcd'),
+  lcd = new Lcd({
+    rs: 12,
+    e: 21,
+    data: [5, 6, 17, 18],
+    cols: 16,
+    rows: 2
+  });
+
 // for running terminal commands
 var childProcess = require('child_process'),
   cmd;
@@ -173,9 +183,9 @@ function socketStreamSetup() {
   }, topicSwitchInterval);
 
   stream1.on('tweet', function(tweet) {
+    lcd.print(tweet.text);
     // send tweet to client
     io.emit('tweetFeed1', tweet);
-    console.log(tweet.text);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
