@@ -129,11 +129,28 @@ var topicId, tokenId;
 init();
 
 function init() {
-  alchemyLanguage("All my endeavors to come to an understanding with Britain were wrecked by the determination of a small clique which, whether from motives of hate or for the sake of material gain, rejected every German proposal for an understanding due to their resolve, which they never concealed, to resort to war, whatever happened.But just as the appeal I made on September 1, 1939, proved to be in vain, this renewed appeal met with indignant rejection. The British and their Jewish capitalist backers could find no other explanation for this appeal, which I had made on humanitarian grounds, than the assumption of weakness on the part of Germany.");
-  // setup socket and twitter stream
+
   socketStreamSetup();
   // set an interval at which data is processed and emited
-  emitDataInterval(5000);
+  setInterval(function() {
+
+    // calulate td-idf
+    calculateTfIdf(analysisGroups[1]);
+
+    // sort tokens
+    sortTokens(analysisGroups[1]);
+
+    // send tokens to client
+    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
+
+    // trim data
+    trimData(analysisGroups[1]);
+
+    console.log("lenght" + analysisGroups[1].txtBuffer.length);
+
+  }, 20000);
+
+  alchemyRequestInterval(60000);
 }
 
 function socketStreamSetup() {
@@ -156,7 +173,7 @@ function socketStreamSetup() {
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
-    console.log(tweet.text);
+    // console.log(tweet.text);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
@@ -169,22 +186,15 @@ function randomizeTopic() {
   console.log("topic:", topics[topicId].topic, "token:" , topics[topicId].tokens[tokenId]);
 }
 
-function emitDataInterval(delay) {
-  // calculate and transmit >sorted< conocordences every 5 seconds
+function alchemyRequestInterval(delay) {
   setInterval(function() {
-
-    // calulate td-idf
-    calculateTfIdf(analysisGroups[1]);
-
-    // sort tokens
-    sortTokens(analysisGroups[1]);
-
-    // send tokens to client
-    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
-
-    // trim data
-    trimData(analysisGroups[1]);
-
+    if (analysisGroups[1].txtBuffer.length > 300) {
+      var combinedTxt = "";
+      for (var index in analysisGroups[1].txtBuffer) {
+        combinedTxt += analysisGroups[1].txtBuffer[index];
+      }
+      alchemyRequest(combinedTxt);
+    }
   }, delay);
 }
 
@@ -200,7 +210,7 @@ function updateWordConcordance(string, group) {
     .toLowerCase();
   var words = parsedString.split(" ");
   group.txtBuffer.push(parsedString); // push to strings
-  eSpeak(parsedString);
+  // eSpeak(parsedString);
   for (var i = 0; i < words.length; i++) {
     var word = words[i];
     // console.log(word, group.tokens[tokens.indexOf(word)] tokens.indexOf(word));
@@ -255,7 +265,7 @@ function sortTokens(group) {
 
 function trimData(group) {
   group.tokens = group.tokens.slice(0, 1000);
-  group.txtBuffer = group.txtBuffer.slice(0, 1000);
+  group.txtBuffer = group.txtBuffer.slice(0, 500);
 }
 
 function calculateTfIdf(group) {
@@ -298,7 +308,7 @@ function eSpeak(text) {
 }
 
 // for AlchemyLanguage
-function alchemyLanguage(txt) {
+function alchemyRequest(txt) {
   var parameters = {
     extract: 'entities,keywords,doc-sentiment',
     sentiment: 1,
