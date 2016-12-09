@@ -179,7 +179,6 @@ function socketStreamSetup() {
       lcd.print("topic: " + topics[topicId].topic);
       lcd.setCursor(0, 1);
       lcd.print(" token: " + topics[topicId].tokens[tokenId]);
-      lcd.autoscroll();
     });
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
