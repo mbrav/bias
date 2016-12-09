@@ -150,7 +150,7 @@ function init() {
 
   }, 20000);
 
-  alchemyRequestInterval(60000);
+  alchemyRequestInterval(15*60*1000);
 }
 
 function socketStreamSetup() {
@@ -169,21 +169,30 @@ function socketStreamSetup() {
     track: topics[topicId].tokens[tokenId]
   });
 
-  // switch topic every 10 minutes
-  var topicSwitchInterval = 10 * 60 * 1000;
-  setInterval(function() {
+  function switchTopic() {
     console.log("swtiching topic");
     // randomize topic and delete previous data
     randomizeTopic();
     clearData(analysisGroups[1]);
+    lcd.on('ready', function () {
+      lcd.setCursor(16, 0);
+      lcd.autoscroll();
+      lcd.print("topic: " + topics[topicId].topic + " token: " + topics[topicId].tokens[tokenId]);
+    });
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
       track: topics[topicId].tokens[tokenId]
     });
+  }
+  switchTopic();
+
+  // switch topic every 10 minutes
+  var topicSwitchInterval = 10 * 60 * 1000;
+  setInterval(function() {
+    switchTopic();
   }, topicSwitchInterval);
 
   stream1.on('tweet', function(tweet) {
-    lcd.print(tweet.text);
     // send tweet to client
     io.emit('tweetFeed1', tweet);
     // update concordance
