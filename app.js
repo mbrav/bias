@@ -5,7 +5,7 @@ var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 var request = require('request-json');
-var Twit = require('twit');
+var Twit = require('twit'), stream1, T;
 var natural = require('natural');
 var io = require('socket.io')(serv, {});
 
@@ -146,43 +146,53 @@ function init() {
     // trim data
     trimData(analysisGroups[1]);
 
-    console.log("lenght" + analysisGroups[1].txtBuffer.length);
-
   }, 20000);
 
-  alchemyRequestInterval(60000);
+  // alchemyRequestInterval(60000);
 }
 
 function socketStreamSetup() {
-  // primary API
-  var T = new Twit({
+  // set Twitter API
+  T = new Twit({
     consumer_key: keys[nodeId-1].consumer_key,
     consumer_secret: keys[nodeId-1].consumer_secret,
     access_token: keys[nodeId-1].access_token,
     access_token_secret: keys[nodeId-1].access_token_secret,
     timeout_ms: 60 * 1000,
   });
-
   // randomize topic
   randomizeTopic();
   // twitter streAMS
-  var stream1 = T.stream('statuses/filter', {
+  stream1 = T.stream('statuses/filter', {
     track: topics[topicId].tokens[tokenId]
   });
+
+  // switch topic every 10 minutes
+  var topicSwitchInterval = 10 * 1000;
+  setInterval(function(){
+    console.log("swtiching topic");
+    // randomize topic
+    randomizeTopic();
+    // twitter streAMS
+    stream1 = T.stream('statuses/filter', {
+      track: topics[topicId].tokens[tokenId]
+    });
+  },topicSwitchInterval);
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
-    // console.log(tweet.text);
+    console.log(tweet.text);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
 }
 
 function randomizeTopic() {
-  topicId = Math.round(Math.random() * topics.length);
-  tokenId = Math.round(Math.random() * topics[topicId].tokens.length);
-  console.log('IDs ', topicId, tokenId);
+  console.log('Randomizing topic..');
+  topicId = Math.round(Math.random() * topics.length)-1;
+  console.log("topic ID" + topicId);
+  tokenId = Math.round(Math.random() * topics[topicId].tokens.length)-1;
   console.log("topic:", topics[topicId].topic, "token:" , topics[topicId].tokens[tokenId]);
 }
 
@@ -311,6 +321,7 @@ function eSpeak(text) {
 function alchemyRequest(txt) {
   var parameters = {
     extract: 'entities,keywords,doc-sentiment',
+    outputMode: 'json',
     sentiment: 1,
     maxRetrieve: 1,
     text: txt
