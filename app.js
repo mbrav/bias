@@ -174,10 +174,7 @@ function socketStreamSetup() {
     // randomize topic and delete previous data
     randomizeTopic();
     clearData(analysisGroups[1]);
-    lcd.setCursor(0, 0);
-    lcd.print("topic: " + topics[topicId].topic);
-    lcd.setCursor(0, 1);
-    lcd.print(" token: " + topics[topicId].tokens[tokenId]);
+    lcd.print(topics[topicId].topic + ": " + topics[topicId].tokens[tokenId]);
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
       track: topics[topicId].tokens[tokenId]
