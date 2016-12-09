@@ -5,7 +5,8 @@ var express = require('express');
 var app = express();
 var serv = require('http').Server(app);
 var request = require('request-json');
-var Twit = require('twit'), stream1, T;
+var Twit = require('twit'),
+  stream1, T;
 var natural = require('natural');
 var io = require('socket.io')(serv, {});
 
@@ -15,7 +16,8 @@ var alchemy_language = watson.alchemy_language({
 });
 
 // for running terminal commands
-var childProcess = require('child_process'), cmd;
+var childProcess = require('child_process'),
+  cmd;
 var talking = false;
 
 // the id of the node
@@ -40,89 +42,79 @@ var analysisGroups = {
   }
 }
 
-var keys = [
-  {
-    consumer_key: 'sidVniQDxPoo3yaNs5pmivFBo',
-    consumer_secret: '88mHZa7CML1U2tarjGwPGWg3Ulm8kjLtFrM0iGKY0BQT1f0gDp',
-    access_token: '237022647-BsVts2RPYaPg6iT9HS2vkaGZk54I4Nkq5QDr4tjT',
-    access_token_secret: '33lZyypJ2UKlSrrLc1PnS8UY8FUrupsUohLuNBbfe35Rc',
-  },
-  {
-    consumer_key: '8hGzNWjVnuuaulqsq1jLg8Odq',
-    consumer_secret: 'NmPpZ3vaqJyDlGgdxPPeIt4wH58q9SuFB2Kmk4bjPy3VYYLrhj',
-    access_token: '237022647-jYWDdY4aLkRfDeH8wStaCTDtfMf1ibccDaL3HH2y',
-    access_token_secret: 'GfDxBCaYKGqAm1EEpt3P8s4TG79Pq0VXEW8LMB0JKmHE1',
-  },
-  {
-    consumer_key: 'aBI8PT0zVpFihiymYOsHERyTv',
-    consumer_secret: '7Bug7h4LyO5YTFZrv51GwFRIv3k1kciyEstbL54tslYjTLOKg8',
-    access_token: '896480534-FG5Lr9MpefI3mPUxBMc2B6rrbuQzJ2xYoF0sq9wP',
-    access_token_secret: '9L5Rl2oOGb3ll7kll2xIV997vhVlFojS8eesOfxF4356k',
-  },
-  {
-    consumer_key: 'xhMZCX38cmgTTcFTdfPL2SlS8',
-    consumer_secret: 'ZNom2ash90VOtRe22b9BjgjW2krS67pxgj5722Mekw4weZVMhj',
-    access_token: '896480534-QcW66OnJa8qu21LVUEGWAclmoQcODqROMk3sPVG0',
-    access_token_secret: 'q75kz5loG1ya60ZIt8LI4tUSwRHjezwchCLOfk4wOklvR',
-  }
-]
+var keys = [{
+  consumer_key: 'sidVniQDxPoo3yaNs5pmivFBo',
+  consumer_secret: '88mHZa7CML1U2tarjGwPGWg3Ulm8kjLtFrM0iGKY0BQT1f0gDp',
+  access_token: '237022647-BsVts2RPYaPg6iT9HS2vkaGZk54I4Nkq5QDr4tjT',
+  access_token_secret: '33lZyypJ2UKlSrrLc1PnS8UY8FUrupsUohLuNBbfe35Rc',
+}, {
+  consumer_key: '8hGzNWjVnuuaulqsq1jLg8Odq',
+  consumer_secret: 'NmPpZ3vaqJyDlGgdxPPeIt4wH58q9SuFB2Kmk4bjPy3VYYLrhj',
+  access_token: '237022647-jYWDdY4aLkRfDeH8wStaCTDtfMf1ibccDaL3HH2y',
+  access_token_secret: 'GfDxBCaYKGqAm1EEpt3P8s4TG79Pq0VXEW8LMB0JKmHE1',
+}, {
+  consumer_key: 'aBI8PT0zVpFihiymYOsHERyTv',
+  consumer_secret: '7Bug7h4LyO5YTFZrv51GwFRIv3k1kciyEstbL54tslYjTLOKg8',
+  access_token: '896480534-FG5Lr9MpefI3mPUxBMc2B6rrbuQzJ2xYoF0sq9wP',
+  access_token_secret: '9L5Rl2oOGb3ll7kll2xIV997vhVlFojS8eesOfxF4356k',
+}, {
+  consumer_key: 'xhMZCX38cmgTTcFTdfPL2SlS8',
+  consumer_secret: 'ZNom2ash90VOtRe22b9BjgjW2krS67pxgj5722Mekw4weZVMhj',
+  access_token: '896480534-QcW66OnJa8qu21LVUEGWAclmoQcODqROMk3sPVG0',
+  access_token_secret: 'q75kz5loG1ya60ZIt8LI4tUSwRHjezwchCLOfk4wOklvR',
+}]
 
-var topics = [
-  {
-    topic: 'politics',
-    tokens: [
-      'trump',
-      'obama',
-      'clinton',
-      'putin',
-      'assad',
-      'merkel',
-      'jinping',
-      'bush',
-    ]
-  },
-  {
-    topic: 'science',
-    tokens: [
-      'climate',
-      'warming',
-      'particle',
-      'cern',
-      'solar',
-      'energy',
-    ]
-  },
-  {
-    topic: 'ideology',
-    tokens: [
-      'communism',
-      'anarchy',
-      'capitalism',
-      'collectivism',
-      'conservatism',
-      'extremism',
-      'fanatic',
-      'fascism',
-      'feminism',
-      'globalism',
-      'individualism',
-      'industrialism',
-      'intellectualism',
-      'liberalism',
-      'militarism',
-      'nationalism',
-      'socialism',
-      'utilitarianism',
-    ]
-  },
-  {
-    topic: 'celebreties',
-    tokens: [
-      'taylor swift',
-      'justin bieber',
-    ]
-  }
-];
+var topics = [{
+  topic: 'politics',
+  tokens: [
+    'trump',
+    'obama',
+    'clinton',
+    'putin',
+    'assad',
+    'merkel',
+    'jinping',
+    'bush',
+  ]
+}, {
+  topic: 'science',
+  tokens: [
+    'climate',
+    'warming',
+    'particle',
+    'cern',
+    'solar',
+    'energy',
+  ]
+}, {
+  topic: 'ideology',
+  tokens: [
+    'communism',
+    'anarchy',
+    'capitalism',
+    'collectivism',
+    'conservatism',
+    'extremism',
+    'fanatic',
+    'fascism',
+    'feminism',
+    'globalism',
+    'individualism',
+    'industrialism',
+    'intellectualism',
+    'liberalism',
+    'militarism',
+    'nationalism',
+    'socialism',
+    'utilitarianism',
+  ]
+}, {
+  topic: 'celebreties',
+  tokens: [
+    'taylor swift',
+    'justin bieber',
+  ]
+}];
 
 var topicId, tokenId;
 
@@ -154,10 +146,10 @@ function init() {
 function socketStreamSetup() {
   // set Twitter API
   T = new Twit({
-    consumer_key: keys[nodeId-1].consumer_key,
-    consumer_secret: keys[nodeId-1].consumer_secret,
-    access_token: keys[nodeId-1].access_token,
-    access_token_secret: keys[nodeId-1].access_token_secret,
+    consumer_key: keys[nodeId - 1].consumer_key,
+    consumer_secret: keys[nodeId - 1].consumer_secret,
+    access_token: keys[nodeId - 1].access_token,
+    access_token_secret: keys[nodeId - 1].access_token_secret,
     timeout_ms: 60 * 1000,
   });
   // randomize topic
@@ -168,8 +160,8 @@ function socketStreamSetup() {
   });
 
   // switch topic every 10 minutes
-  var topicSwitchInterval = 10 * 1000;
-  setInterval(function(){
+  var topicSwitchInterval = 10 * 60 * 1000;
+  setInterval(function() {
     console.log("swtiching topic");
     // randomize topic
     randomizeTopic();
@@ -177,12 +169,12 @@ function socketStreamSetup() {
     stream1 = T.stream('statuses/filter', {
       track: topics[topicId].tokens[tokenId]
     });
-  },topicSwitchInterval);
+  }, topicSwitchInterval);
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
-    console.log(tweet.text);
+    // console.log(tweet.text);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
@@ -190,10 +182,9 @@ function socketStreamSetup() {
 
 function randomizeTopic() {
   console.log('Randomizing topic..');
-  topicId = Math.round(Math.random() * topics.length)-1;
-  console.log("topic ID" + topicId);
-  tokenId = Math.round(Math.random() * topics[topicId].tokens.length)-1;
-  console.log("topic:", topics[topicId].topic, "token:" , topics[topicId].tokens[tokenId]);
+  topicId = Math.round(Math.random() * topics.length) - 1;
+  tokenId = Math.round(Math.random() * topics[topicId].tokens.length) - 1;
+  console.log("New topic:", topics[topicId].topic, "New token:", topics[topicId].tokens[tokenId]);
 }
 
 function alchemyRequestInterval(delay) {
@@ -310,7 +301,7 @@ function eSpeak(text) {
         console.log('exec error: ' + error);
       }
     });
-    cmd.on('exit', function (code) {
+    cmd.on('exit', function(code) {
       console.log("voice OFF");
       talking = false;
     });
@@ -327,11 +318,11 @@ function alchemyRequest(txt) {
     text: txt
   };
 
-  alchemy_language.combined(parameters, function (err, response) {
-  if (err)
-    console.log('error:', err);
-  else
-    console.log(JSON.stringify(response, null, 2));
+  alchemy_language.combined(parameters, function(err, response) {
+    if (err)
+      console.log('error:', err);
+    else
+      console.log(JSON.stringify(response, null, 2));
   });
 }
 
