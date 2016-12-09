@@ -140,7 +140,7 @@ function init() {
 
   }, 20000);
 
-  // alchemyRequestInterval(60000);
+  alchemyRequestInterval(60000);
 }
 
 function socketStreamSetup() {
@@ -163,8 +163,9 @@ function socketStreamSetup() {
   var topicSwitchInterval = 10 * 60 * 1000;
   setInterval(function() {
     console.log("swtiching topic");
-    // randomize topic
+    // randomize topic and delete previous data
     randomizeTopic();
+    clearData(analysisGroups[1]);
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
       track: topics[topicId].tokens[tokenId]
@@ -174,7 +175,7 @@ function socketStreamSetup() {
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
-    // console.log(tweet.text);
+    console.log(tweet.text);
     // update concordance
     updateWordConcordance(tweet.text, analysisGroups[1]);
   });
@@ -211,7 +212,7 @@ function updateWordConcordance(string, group) {
     .toLowerCase();
   var words = parsedString.split(" ");
   group.txtBuffer.push(parsedString); // push to strings
-  // eSpeak(parsedString);
+  speak(parsedString);
   for (var i = 0; i < words.length; i++) {
     var word = words[i];
     // console.log(word, group.tokens[tokens.indexOf(word)] tokens.indexOf(word));
@@ -265,8 +266,13 @@ function sortTokens(group) {
 }
 
 function trimData(group) {
-  group.tokens = group.tokens.slice(0, 1000);
-  group.txtBuffer = group.txtBuffer.slice(0, 500);
+  group.tokens = group.tokens.slice(0, 300);
+  group.txtBuffer = group.txtBuffer.slice(0, 400);
+}
+
+function clearData(group) {
+  for (var member in group.tokens) delete group.tokens[member];
+  for (var member in group.txtBuffer) delete group.txtBuffer[member];
 }
 
 function calculateTfIdf(group) {
@@ -289,12 +295,13 @@ function calculateTfIdf(group) {
   }
 }
 
-function eSpeak(text) {
+function speak(text) {
   // talk only when not currently talking, avoid overlaping
   if (!talking) {
     talking = true;
-    // say -v Samantha -r 2000 "Hello I like to talk super fast"
-    var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
+    // var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
+    // var cmdText = '.googleTTS.sh' + text;
+    var cmdText = 'say -v Samantha -r 2000 "' + text + '"'; // for macOS only
     cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
       console.log("voice ON");
       if (error !== null) {
