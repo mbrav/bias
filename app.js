@@ -174,7 +174,10 @@ function socketStreamSetup() {
     // randomize topic and delete previous data
     randomizeTopic();
     clearData(analysisGroups[1]);
-    lcd.print(topics[topicId].topic + ": " + topics[topicId].tokens[tokenId]);
+    lcd.on('ready', function() {
+      lcd.setCursor(0, 0);
+      lcd.print(topics[topicId].topic.toString() + ": " + topics[topicId].tokens[tokenId].toString());
+    }
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
       track: topics[topicId].tokens[tokenId]
@@ -314,8 +317,8 @@ function speak(text) {
   // talk only when not currently talking, avoid overlaping
   if (!talking) {
     talking = true;
-    // var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
-    var cmdText = './googleTTS.sh ' + text;
+    var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
+    // var cmdText = './googleTTS.sh ' + text;
     // var cmdText = 'say -v Samantha -r 2000 "' + text + '"'; // for macOS only
     cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
       console.log("voice ON");
