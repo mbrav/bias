@@ -174,7 +174,7 @@ function init() {
 
   }, 20000);
 
-  // alchemyRequestInterval(15*60*1000);
+  alchemyRequestInterval(15*60*1000);
 }
 
 function socketStreamSetup() {
@@ -197,10 +197,6 @@ function socketStreamSetup() {
     console.log("swtiching topic");
     // randomize topic and delete previous data
     randomizeTopic();
-    // twitter streAMS
-    stream1 = T.stream('statuses/filter', {
-      track: topics[topicId].tokens[tokenId]
-    });
     clearData(analysisGroups[1]);
     lcd.on('ready', function() {
   		lcd.clear(function () {
@@ -216,10 +212,15 @@ function socketStreamSetup() {
   			});
   		});
     });
+    // twitter streAMS
+    stream1 = T.stream('statuses/filter', {
+      track: topics[topicId].tokens[tokenId]
+    });
   }
+  switchTopic();
 
-  // switch topic every 1 minutes
-  var topicSwitchInterval = 1 * 60 * 1000;
+  // switch topic every 10 minutes
+  var topicSwitchInterval = 10 * 60 * 1000;
   setInterval(function() {
     switchTopic();
   }, topicSwitchInterval);
