@@ -205,24 +205,12 @@ function socketStreamSetup() {
   			lcd.once('printed', function() {
   				lcd.setCursor(0, 1);
   				lcd.print(topics[topicId].tokens[tokenId]);
-  				lcd.once('printed', function() {
-  					// lcd.clear();
-  					// lcd.close();
-  				});
+  				// lcd.once('printed', function() {
+  				// 	// lcd.clear();
+  				// 	// lcd.close();
+  				// });
   			});
   		});
-    });
-    lcd.clear(function () {
-      lcd.setCursor(0, 0);
-      lcd.print(topics[topicId].topic + ":");
-      lcd.once('printed', function() {
-        lcd.setCursor(0, 1);
-        lcd.print(topics[topicId].tokens[tokenId]);
-        lcd.once('printed', function() {
-          // lcd.clear();
-          // lcd.close();
-        });
-      });
     });
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
