@@ -174,7 +174,7 @@ function init() {
 
   }, 20000);
 
-  alchemyRequestInterval(15*60*1000);
+  // alchemyRequestInterval(15*60*1000);
 }
 
 function socketStreamSetup() {
@@ -219,8 +219,8 @@ function socketStreamSetup() {
   }
   switchTopic();
 
-  // switch topic every 10 minutes
-  var topicSwitchInterval = 10 * 60 * 1000;
+  // switch topic every 1 minutes
+  var topicSwitchInterval = 1 * 60 * 1000;
   setInterval(function() {
     switchTopic();
   }, topicSwitchInterval);
