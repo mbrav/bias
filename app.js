@@ -156,7 +156,7 @@ init();
 
 function init() {
 
-  // socketStreamSetup();
+  socketStreamSetup();
   // // set an interval at which data is processed and emited
   // setInterval(function() {
   //
