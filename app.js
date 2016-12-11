@@ -89,12 +89,12 @@ var topics = [{
 }, {
   topic: 'science',
   tokens: [
-    'climate',
-    'warming',
+    'climate change',
+    'global warming',
     'particle',
     'cern',
-    'solar',
-    'energy',
+    'solar energy',
+    'sustainability',
   ]
 }, {
   topic: 'ideology',
@@ -119,10 +119,34 @@ var topics = [{
     'utilitarianism',
   ]
 }, {
+  topic: 'consumerisms',
+  tokens: [
+    'eyeliner',
+    'soda',
+    'shampoo',
+  ]
+}, {
+  topic: 'marketing',
+  tokens: [
+    'fresh',
+    'juicy',
+    'tastey',
+    'free',
+    'guaranteed',
+    'amazing',
+    'instant',
+    'premium'
+  ]
+}, {
   topic: 'celebreties',
   tokens: [
     'taylor swift',
     'justin bieber',
+    'drake',
+    'kim kardashian',
+    'kanye west',
+    'beyonce',
+    'miley cyrus',
   ]
 }];
 
@@ -150,7 +174,7 @@ function init() {
 
   }, 20000);
 
-  alchemyRequestInterval(15*60*1000);
+  // alchemyRequestInterval(15*60*1000);
 }
 
 function socketStreamSetup() {
