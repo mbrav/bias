@@ -220,7 +220,7 @@ function socketStreamSetup() {
   switchTopic();
 
   // switch topic every 1 minutes
-  var topicSwitchInterval = 1 * 60 * 1000;
+  var topicSwitchInterval = 60 * 1000;
   setInterval(function() {
     switchTopic();
   }, topicSwitchInterval);
