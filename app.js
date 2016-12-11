@@ -177,14 +177,14 @@ function socketStreamSetup() {
     lcd.on('ready', function() {
   		lcd.clear(function () {
   			lcd.setCursor(0, 0);
-  			lcd.print("|" + topics[topicId].topic + "|");
+  			lcd.print(topics[topicId].topic);
   			lcd.once('printed', function() {
   				lcd.setCursor(0, 1);
-  				lcd.print(topics[topicId].tokens[tokenId]);
-  				lcd.once('printed', function() {
-  					lcd.clear();
-  					lcd.close();
-  				});
+  				lcd.print(" " + topics[topicId].tokens[tokenId]);
+  				// lcd.once('printed', function() {
+  				// 	lcd.clear();
+  				// 	lcd.close();
+  				// });
   			});
   		});
     });
