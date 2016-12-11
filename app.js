@@ -156,23 +156,23 @@ init();
 
 function init() {
 
-  socketStreamSetup();
-  // set an interval at which data is processed and emited
-  setInterval(function() {
-
-    // calulate td-idf
-    calculateTfIdf(analysisGroups[1]);
-
-    // sort tokens
-    sortTokens(analysisGroups[1]);
-
-    // send tokens to client
-    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
-
-    // trim data
-    trimData(analysisGroups[1]);
-
-  }, 20000);
+  // socketStreamSetup();
+  // // set an interval at which data is processed and emited
+  // setInterval(function() {
+  //
+  //   // calulate td-idf
+  //   calculateTfIdf(analysisGroups[1]);
+  //
+  //   // sort tokens
+  //   sortTokens(analysisGroups[1]);
+  //
+  //   // send tokens to client
+  //   io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
+  //
+  //   // trim data
+  //   trimData(analysisGroups[1]);
+  //
+  // }, 20000);
 
   // alchemyRequestInterval(15*60*1000);
 }
