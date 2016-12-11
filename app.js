@@ -205,10 +205,10 @@ function socketStreamSetup() {
   			lcd.once('printed', function() {
   				lcd.setCursor(0, 1);
   				lcd.print(topics[topicId].tokens[tokenId]);
-  				// lcd.once('printed', function() {
-  				// 	lcd.clear();
-  				// 	lcd.close();
-  				// });
+  				lcd.once('printed', function() {
+  					lcd.clear();
+  					// lcd.close();
+  				});
   			});
   		});
     });
