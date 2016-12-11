@@ -183,8 +183,8 @@ function socketStreamSetup() {
 
 function randomizeTopic() {
   console.log('Randomizing topic..');
-  topicId = Math.round(Math.random() * topics.length) - 1;
-  tokenId = Math.round(Math.random() * topics[topicId].tokens.length) - 1;
+  topicId = Math.round(Math.random() * (topics.length-1));
+  tokenId = Math.round(Math.random() * (topics[topicId].tokens.length));
   console.log("New topic:", topics[topicId].topic, "New token:", topics[topicId].tokens[tokenId]);
 }
 
