@@ -176,8 +176,8 @@ function socketStreamSetup() {
     clearData(analysisGroups[1]);
     lcd.on('ready', function() {
       lcd.setCursor(0, 0);
-      lcd.print(topics[topicId].topic + ":");
-      lcd.setCursor(0, 1);
+      lcd.print(topics[topicId].topic);
+      lcd.setCursor(1, 0);
       lcd.print(" >" + topics[topicId].tokens[tokenId]);
     });
     // twitter streAMS
@@ -203,8 +203,8 @@ function socketStreamSetup() {
 
 function randomizeTopic() {
   console.log('Randomizing topic..');
-  topicId = Math.round(Math.random() * topics.length) - 1;
-  tokenId = Math.round(Math.random() * topics[topicId].tokens.length) - 1;
+  topicId = Math.round(Math.random() * (topics.length-1));
+  tokenId = Math.round(Math.random() * (topics[topicId].tokens.length-1));
   console.log("New topic:", topics[topicId].topic, "New token:", topics[topicId].tokens[tokenId]);
 }
 
