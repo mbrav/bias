@@ -206,8 +206,8 @@ function socketStreamSetup() {
   				lcd.setCursor(0, 1);
   				lcd.print(topics[topicId].tokens[tokenId]);
   				lcd.once('printed', function() {
-  					lcd.clear();
-  					// lcd.close();
+  					// lcd.clear();
+  					lcd.close();
   				});
   			});
   		});
