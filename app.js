@@ -172,7 +172,12 @@ function socketStreamSetup() {
   function switchTopic() {
     console.log("swtiching topic");
     // randomize topic and delete previous data
-    randomizeTopic();
+    randomizeTopic(function() {
+      stream1 = T.stream('statuses/filter', {
+        track: topics[topicId].tokens[tokenId]
+      });
+    });
+    // twitter streAMS
     clearData(analysisGroups[1]);
     lcd.on('ready', function() {
   		lcd.clear(function () {
@@ -188,15 +193,10 @@ function socketStreamSetup() {
   			});
   		});
     });
-    // twitter streAMS
-    stream1 = T.stream('statuses/filter', {
-      track: topics[topicId].tokens[tokenId]
-    });
   }
-  switchTopic();
 
-  // switch topic every 10 minutes
-  var topicSwitchInterval = 10 * 60 * 1000;
+  // switch topic every 1 minutes
+  var topicSwitchInterval = 1 * 60 * 1000;
   setInterval(function() {
     switchTopic();
   }, topicSwitchInterval);
