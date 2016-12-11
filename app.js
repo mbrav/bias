@@ -172,12 +172,11 @@ function socketStreamSetup() {
   function switchTopic() {
     console.log("swtiching topic");
     // randomize topic and delete previous data
-    randomizeTopic(function() {
-      stream1 = T.stream('statuses/filter', {
-        track: topics[topicId].tokens[tokenId]
-      });
-    });
+    randomizeTopic();
     // twitter streAMS
+    stream1 = T.stream('statuses/filter', {
+      track: topics[topicId].tokens[tokenId]
+    });
     clearData(analysisGroups[1]);
     lcd.on('ready', function() {
   		lcd.clear(function () {
