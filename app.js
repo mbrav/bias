@@ -193,11 +193,6 @@ function socketStreamSetup() {
     timeout_ms: 60 * 1000,
   });
 
-  // twitter streAMS
-  stream1 = T.stream('statuses/filter', {
-    track: topics[topicId].tokens[tokenId]
-  });
-
   function randomizeTopic() {
     console.log('Randomizing topic..');
     topicId = Math.round(Math.random() * (topics.length - 1));
@@ -232,6 +227,11 @@ function socketStreamSetup() {
     randomizeTopic();
     switchTopic();
   }, topicSwitchInterval);
+
+  // twitter streAMS
+  stream1 = T.stream('statuses/filter', {
+    track: topics[topicId].tokens[tokenId]
+  });
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
