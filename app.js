@@ -52,6 +52,11 @@ var analysisGroups = {
   }
 }
 
+// ext node after 2 minutes
+setInterval(function() {
+  process.exit();
+},120000);
+
 var keys = [{
   consumer_key: 'sidVniQDxPoo3yaNs5pmivFBo',
   consumer_secret: '88mHZa7CML1U2tarjGwPGWg3Ulm8kjLtFrM0iGKY0BQT1f0gDp',
