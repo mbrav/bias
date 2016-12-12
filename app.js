@@ -177,12 +177,6 @@ function init() {
   // alchemyRequestInterval(15*60*1000);
 }
 
-// catch ctrl+c event and exit normally
-process.on('SIGINT', function() {
-  console.log('Ctrl-C EXIT');
-  lcd.close();
-});
-
 // do app specific cleaning before exiting
 process.on('exit', function() {
   console.log('EXIT');
@@ -197,12 +191,6 @@ function socketStreamSetup() {
     access_token: keys[nodeId - 1].access_token,
     access_token_secret: keys[nodeId - 1].access_token_secret,
     timeout_ms: 60 * 1000,
-  });
-  // randomize topic
-  randomizeTopic();
-  // twitter streAMS
-  stream1 = T.stream('statuses/filter', {
-    track: topics[topicId].tokens[tokenId]
   });
 
   function switchTopic() {
@@ -224,12 +212,14 @@ function socketStreamSetup() {
         });
       });
     });
+
+    // randomize topic
+    randomizeTopic();
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
       track: topics[topicId].tokens[tokenId]
     });
   }
-  switchTopic();
 
   // switch topic every 1 minutes
   var topicSwitchInterval = 60 * 1000;
