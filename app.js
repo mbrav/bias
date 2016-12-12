@@ -110,12 +110,11 @@ var topics = [{
     'collectivism',
     'conservatism',
     'extremism',
-    'fanatic',
+    'technocapitalism',
     'fascism',
     'feminism',
     'globalism',
     'individualism',
-    'industrialism',
     'intellectualism',
     'liberalism',
     'militarism',
@@ -124,14 +123,18 @@ var topics = [{
     'utilitarianism',
   ]
 }, {
-  topic: 'consumerisms',
+  topic: 'technocracy',
   tokens: [
-    'eyeliner',
-    'soda',
-    'shampoo',
+    'data analysis',
+    'determinism',
+    'bioinformatics',
+    'neural lace',
+    'cyborgs',
+    'technoromanticism',
+    'technoliberalism',
   ]
 }, {
-  topic: 'marketing',
+  topic: 'consumerism',
   tokens: [
     'fresh',
     'juicy',
@@ -140,7 +143,22 @@ var topics = [{
     'guaranteed',
     'amazing',
     'instant',
-    'premium'
+    'premium',
+    'fat free',
+    'no additives',
+    'big sale',
+    'eyeliner',
+    'soda',
+    'shampoo',
+  ]
+}, {
+  topic: 'memoir',
+  tokens: [
+    'Adolf Hitler',
+    'Steve Jobs',
+    'Mahatma Ghandi',
+    'Mao Zedong',
+    'Joseph Stalin'
   ]
 }, {
   topic: 'celebreties',
