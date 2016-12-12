@@ -227,11 +227,6 @@ function socketStreamSetup() {
     //   lcd.setCursor(0, 1);
     //   lcd.print(topics[topicId].tokens[tokenId]);
     // });
-
-    // twitter streAMS
-    stream1 = T.stream('statuses/filter', {
-      track: topics[topicId].tokens[tokenId]
-    });
   }
 
   // switch topic every 1 minutes
@@ -243,6 +238,11 @@ function socketStreamSetup() {
   // // do it in the beginning
   // randomizeTopic();
   // switchTopic();
+
+  // twitter streAMS
+  stream1 = T.stream('statuses/filter', {
+    track: topics[topicId].tokens[tokenId]
+  });
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
