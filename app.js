@@ -212,10 +212,9 @@ function socketStreamSetup() {
         lcd.once('printed', function() {
           lcd.setCursor(0, 1);
           lcd.print(topics[topicId].tokens[tokenId]);
-          // lcd.once('printed', function() {
-          // 	// lcd.clear();
-          // 	// lcd.close();
-          // });
+          lcd.once('printed', function() {
+          	lcd.clear();
+          });
         });
       });
     });
@@ -239,6 +238,7 @@ function socketStreamSetup() {
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
+    speak(tweet.text)
     // // update concordance
     // updateWordConcordance(tweet.text, analysisGroups[1]);
   });
