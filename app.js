@@ -206,6 +206,7 @@ function socketStreamSetup() {
     randomizeTopic();
     clearData(analysisGroups[1]);
     lcd.on('ready', function() {
+      console.log("udpating display");
       lcd.clear(function() {
         lcd.setCursor(0, 0);
         lcd.print(topics[topicId].topic + ":");
