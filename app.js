@@ -365,7 +365,7 @@ function speak(text) {
   if (!talking) {
     talking = true;
     // var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
-    var cmdText = './googleTTS.sh ' + text;
+    var cmdText = './googleTTS.sh "' + text+ '"';
     // var cmdText = 'say -v Samantha -r 2000 "' + text + '"'; // for macOS only
     cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
       console.log("voice ON");
