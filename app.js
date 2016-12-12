@@ -177,6 +177,18 @@ function init() {
   // alchemyRequestInterval(15*60*1000);
 }
 
+// catch ctrl+c event and exit normally
+process.on('SIGINT', function() {
+  console.log('Ctrl-C EXIT');
+  lcd.close();
+});
+
+// do app specific cleaning before exiting
+process.on('exit', function() {
+  console.log('EXIT');
+  lcd.close();
+});
+
 function socketStreamSetup() {
   // set Twitter API
   T = new Twit({
@@ -199,18 +211,18 @@ function socketStreamSetup() {
     randomizeTopic();
     clearData(analysisGroups[1]);
     lcd.on('ready', function() {
-  		lcd.clear(function () {
-  			lcd.setCursor(0, 0);
-  			lcd.print(topics[topicId].topic + ":");
-  			lcd.once('printed', function() {
-  				lcd.setCursor(0, 1);
-  				lcd.print(topics[topicId].tokens[tokenId]);
-  				// lcd.once('printed', function() {
-  				// 	// lcd.clear();
-  				// 	// lcd.close();
-  				// });
-  			});
-  		});
+      lcd.clear(function() {
+        lcd.setCursor(0, 0);
+        lcd.print(topics[topicId].topic + ":");
+        lcd.once('printed', function() {
+          lcd.setCursor(0, 1);
+          lcd.print(topics[topicId].tokens[tokenId]);
+          // lcd.once('printed', function() {
+          // 	// lcd.clear();
+          // 	// lcd.close();
+          // });
+        });
+      });
     });
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
@@ -235,8 +247,8 @@ function socketStreamSetup() {
 
 function randomizeTopic() {
   console.log('Randomizing topic..');
-  topicId = Math.round(Math.random() * (topics.length-1));
-  tokenId = Math.round(Math.random() * (topics[topicId].tokens.length-1));
+  topicId = Math.round(Math.random() * (topics.length - 1));
+  tokenId = Math.round(Math.random() * (topics[topicId].tokens.length - 1));
   console.log("New topic:", topics[topicId].topic, "New token:", topics[topicId].tokens[tokenId]);
 }
 
