@@ -219,14 +219,14 @@ function socketStreamSetup() {
         });
       });
     });
-
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(topics[topicId].topic + ":");
-    lcd.once('printed', function() {
-      lcd.setCursor(0, 1);
-      lcd.print(topics[topicId].tokens[tokenId]);
-    });
+    //
+    // lcd.clear();
+    // lcd.setCursor(0, 0);
+    // lcd.print(topics[topicId].topic + ":");
+    // lcd.once('printed', function() {
+    //   lcd.setCursor(0, 1);
+    //   lcd.print(topics[topicId].tokens[tokenId]);
+    // });
 
     // twitter streAMS
     stream1 = T.stream('statuses/filter', {
@@ -235,14 +235,14 @@ function socketStreamSetup() {
   }
 
   // switch topic every 1 minutes
-  var topicSwitchInterval = 60 * 1000;
-  setInterval(function() {
-    randomizeTopic();
-    switchTopic();
-  }, topicSwitchInterval);
-  // do it in the beginning
-  randomizeTopic();
-  switchTopic();
+  // var topicSwitchInterval = 60 * 1000;
+  // setInterval(function() {
+  //   randomizeTopic();
+  //   switchTopic();
+  // }, topicSwitchInterval);
+  // // do it in the beginning
+  // randomizeTopic();
+  // switchTopic();
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
