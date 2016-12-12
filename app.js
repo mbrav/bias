@@ -227,6 +227,9 @@ function socketStreamSetup() {
     randomizeTopic();
     switchTopic();
   }, topicSwitchInterval);
+  // do it in the beginning
+  randomizeTopic();
+  switchTopic();
 
   // twitter streAMS
   stream1 = T.stream('statuses/filter', {
