@@ -193,6 +193,18 @@ function socketStreamSetup() {
     timeout_ms: 60 * 1000,
   });
 
+  // twitter streAMS
+  stream1 = T.stream('statuses/filter', {
+    track: topics[topicId].tokens[tokenId]
+  });
+
+  function randomizeTopic() {
+    console.log('Randomizing topic..');
+    topicId = Math.round(Math.random() * (topics.length - 1));
+    tokenId = Math.round(Math.random() * (topics[topicId].tokens.length - 1));
+    console.log("New topic:", topics[topicId].topic, "New token:", topics[topicId].tokens[tokenId]);
+  }
+
   function switchTopic() {
     console.log("swtiching topic");
     // randomize topic and delete previous data
@@ -212,34 +224,21 @@ function socketStreamSetup() {
         });
       });
     });
-
-    // randomize topic
-    randomizeTopic();
-    // twitter streAMS
-    stream1 = T.stream('statuses/filter', {
-      track: topics[topicId].tokens[tokenId]
-    });
   }
 
   // switch topic every 1 minutes
   var topicSwitchInterval = 60 * 1000;
   setInterval(function() {
+    randomizeTopic();
     switchTopic();
   }, topicSwitchInterval);
 
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
-    // update concordance
-    updateWordConcordance(tweet.text, analysisGroups[1]);
+    // // update concordance
+    // updateWordConcordance(tweet.text, analysisGroups[1]);
   });
-}
-
-function randomizeTopic() {
-  console.log('Randomizing topic..');
-  topicId = Math.round(Math.random() * (topics.length - 1));
-  tokenId = Math.round(Math.random() * (topics[topicId].tokens.length - 1));
-  console.log("New topic:", topics[topicId].topic, "New token:", topics[topicId].tokens[tokenId]);
 }
 
 function alchemyRequestInterval(delay) {
