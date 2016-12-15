@@ -132,7 +132,7 @@ var topics = [{
     'bioinformatics',
     'neural lace',
     'cyborgs',
-    'social media'.
+    'social media',
     'iphone',
     'computer',
     'transistor',
