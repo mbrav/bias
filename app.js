@@ -85,11 +85,12 @@ var topics = [{
     'trump',
     'obama',
     'clinton',
-    'putin',
+    'Valdimir Putin',
     'assad',
     'merkel',
     'jinping',
-    'bush',
+    'George Bush',
+    'Silvio Berlusconi'
   ]
 }, {
   topic: 'science',
@@ -100,6 +101,8 @@ var topics = [{
     'cern',
     'solar energy',
     'sustainability',
+    'DNA',
+    'x-ray'
   ]
 }, {
   topic: 'ideology',
@@ -123,15 +126,23 @@ var topics = [{
     'utilitarianism',
   ]
 }, {
-  topic: 'technocracy',
+  topic: 'technology',
   tokens: [
     'data analysis',
-    'determinism',
     'bioinformatics',
     'neural lace',
     'cyborgs',
-    'technoromanticism',
-    'technoliberalism',
+    'social media'.
+    'iphone',
+    'computer',
+    'transistor',
+    'samsung',
+    'chemoterapy',
+    'Internet',
+    'robotics',
+    'electronics',
+    'mining',
+    'sustainability'
   ]
 }, {
   topic: 'consumerism',
@@ -152,13 +163,34 @@ var topics = [{
     'shampoo',
   ]
 }, {
-  topic: 'memoir',
+  topic: 'memoirs',
   tokens: [
-    'Adolf Hitler',
     'Steve Jobs',
-    'Mahatma Ghandi',
+    'Mahatma Gandhi',
     'Mao Zedong',
-    'Joseph Stalin'
+    'Adolf Hitler',
+    'Joseph Stalin',
+    'Abraham Lincoln',
+    'Nelson Mandela',
+    'Winston Churchill',
+    'George Orwell',
+    'Margaret Thatcher',
+    'Charles Darwin',
+    'Albert Einstein',
+    'Paul McCartney',
+    'Plato',
+    'Socrates',
+    'Aristotle',
+    'Confucius',
+    'Rene Descrates',
+    'Leonardo da Vinci',
+    'Leo Tolstoy',
+    'Pablo Picasso',
+    'Thomas Edison',
+    'Malcolm X',
+    'Ernest Hemingway',
+    'Fidel Castro',
+    'Marilyn Monroe'
   ]
 }, {
   topic: 'celebreties',
@@ -170,6 +202,7 @@ var topics = [{
     'kanye west',
     'beyonce',
     'miley cyrus',
+    'brad pit'
   ]
 }];
 
