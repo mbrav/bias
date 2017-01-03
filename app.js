@@ -15,6 +15,16 @@ var alchemy_language = watson.alchemy_language({
   api_key: '9bd879d2dfdcb2cde467aac82d9be5c70477f349'
 });
 
+// for lcd
+var Lcd = require('lcd'),
+  lcd = new Lcd({
+    rs: 12,
+    e: 21,
+    data: [5, 6, 17, 18],
+    cols: 16,
+    rows: 2
+  });
+
 // for running terminal commands
 var childProcess = require('child_process'),
   cmd;
@@ -41,6 +51,11 @@ var analysisGroups = {
     txtBuffer: []
   }
 }
+
+// ext node after 2 minutes
+setInterval(function() {
+  process.exit();
+},120000);
 
 var keys = [{
   consumer_key: 'sidVniQDxPoo3yaNs5pmivFBo',
@@ -70,21 +85,24 @@ var topics = [{
     'trump',
     'obama',
     'clinton',
-    'putin',
+    'Valdimir Putin',
     'assad',
     'merkel',
     'jinping',
-    'bush',
+    'George Bush',
+    'Silvio Berlusconi'
   ]
 }, {
   topic: 'science',
   tokens: [
-    'climate',
-    'warming',
+    'climate change',
+    'global warming',
     'particle',
     'cern',
-    'solar',
-    'energy',
+    'solar energy',
+    'sustainability',
+    'DNA',
+    'x-ray'
   ]
 }, {
   topic: 'ideology',
@@ -95,12 +113,11 @@ var topics = [{
     'collectivism',
     'conservatism',
     'extremism',
-    'fanatic',
+    'technocapitalism',
     'fascism',
     'feminism',
     'globalism',
     'individualism',
-    'industrialism',
     'intellectualism',
     'liberalism',
     'militarism',
@@ -109,10 +126,83 @@ var topics = [{
     'utilitarianism',
   ]
 }, {
+  topic: 'technology',
+  tokens: [
+    'data analysis',
+    'bioinformatics',
+    'neural lace',
+    'cyborgs',
+    'social media',
+    'iphone',
+    'computer',
+    'transistor',
+    'samsung',
+    'chemoterapy',
+    'Internet',
+    'robotics',
+    'electronics',
+    'mining',
+    'sustainability'
+  ]
+}, {
+  topic: 'consumerism',
+  tokens: [
+    'fresh',
+    'juicy',
+    'tastey',
+    'free',
+    'guaranteed',
+    'amazing',
+    'instant',
+    'premium',
+    'fat free',
+    'no additives',
+    'big sale',
+    'eyeliner',
+    'soda',
+    'shampoo',
+  ]
+}, {
+  topic: 'memoirs',
+  tokens: [
+    'Steve Jobs',
+    'Mahatma Gandhi',
+    'Mao Zedong',
+    'Adolf Hitler',
+    'Joseph Stalin',
+    'Abraham Lincoln',
+    'Nelson Mandela',
+    'Winston Churchill',
+    'George Orwell',
+    'Margaret Thatcher',
+    'Charles Darwin',
+    'Albert Einstein',
+    'Paul McCartney',
+    'Plato',
+    'Socrates',
+    'Aristotle',
+    'Confucius',
+    'Rene Descrates',
+    'Leonardo da Vinci',
+    'Leo Tolstoy',
+    'Pablo Picasso',
+    'Thomas Edison',
+    'Malcolm X',
+    'Ernest Hemingway',
+    'Fidel Castro',
+    'Marilyn Monroe'
+  ]
+}, {
   topic: 'celebreties',
   tokens: [
     'taylor swift',
     'justin bieber',
+    'drake',
+    'kim kardashian',
+    'kanye west',
+    'beyonce',
+    'miley cyrus',
+    'brad pit'
   ]
 }];
 
@@ -123,25 +213,31 @@ init();
 function init() {
 
   socketStreamSetup();
-  // set an interval at which data is processed and emited
-  setInterval(function() {
+  // // set an interval at which data is processed and emited
+  // setInterval(function() {
+  //
+  //   // calulate td-idf
+  //   calculateTfIdf(analysisGroups[1]);
+  //
+  //   // sort tokens
+  //   sortTokens(analysisGroups[1]);
+  //
+  //   // send tokens to client
+  //   io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
+  //
+  //   // trim data
+  //   trimData(analysisGroups[1]);
+  //
+  // }, 20000);
 
-    // calulate td-idf
-    calculateTfIdf(analysisGroups[1]);
-
-    // sort tokens
-    sortTokens(analysisGroups[1]);
-
-    // send tokens to client
-    io.emit('tokens1', analysisGroups[1].tokens.slice(0, 30));
-
-    // trim data
-    trimData(analysisGroups[1]);
-
-  }, 20000);
-
-  alchemyRequestInterval(60000);
+  // alchemyRequestInterval(15*60*1000);
 }
+
+// do app specific cleaning before exiting
+process.on('exit', function() {
+  console.log('EXIT');
+  lcd.close();
+});
 
 function socketStreamSetup() {
   // set Twitter API
@@ -152,32 +248,64 @@ function socketStreamSetup() {
     access_token_secret: keys[nodeId - 1].access_token_secret,
     timeout_ms: 60 * 1000,
   });
-  // randomize topic
+
+  function randomizeTopic() {
+    console.log('Randomizing topic..');
+    topicId = Math.round(Math.random() * (topics.length - 1));
+    tokenId = Math.round(Math.random() * (topics[topicId].tokens.length - 1));
+    console.log("New topic:", topics[topicId].topic, "New token:", topics[topicId].tokens[tokenId]);
+  }
+
+  function switchTopic() {
+    console.log("swtiching topic");
+    // randomize topic and delete previous data
+    randomizeTopic();
+    clearData(analysisGroups[1]);
+    lcd.on('ready', function() {
+      console.log("udpating display");
+      lcd.clear(function() {
+        lcd.setCursor(0, 0);
+        lcd.print(topics[topicId].topic + ":");
+        lcd.once('printed', function() {
+          lcd.setCursor(0, 1);
+          lcd.print(topics[topicId].tokens[tokenId]);
+          lcd.once('printed', function() {
+          	// lcd.clear();
+          });
+        });
+      });
+    });
+    //
+    // lcd.clear();
+    // lcd.setCursor(0, 0);
+    // lcd.print(topics[topicId].topic + ":");
+    // lcd.once('printed', function() {
+    //   lcd.setCursor(0, 1);
+    //   lcd.print(topics[topicId].tokens[tokenId]);
+    // });
+  }
+
+  // switch topic every 1 minutes
+  // var topicSwitchInterval = 60 * 1000;
+  // setInterval(function() {
+  //   randomizeTopic();
+  //   switchTopic();
+  // }, topicSwitchInterval);
+  // do it in the beginning
   randomizeTopic();
+  switchTopic();
+
   // twitter streAMS
   stream1 = T.stream('statuses/filter', {
     track: topics[topicId].tokens[tokenId]
   });
 
-  // switch topic every 10 minutes
-  var topicSwitchInterval = 10 * 60 * 1000;
-  setInterval(function() {
-    console.log("swtiching topic");
-    // randomize topic and delete previous data
-    randomizeTopic();
-    clearData(analysisGroups[1]);
-    // twitter streAMS
-    stream1 = T.stream('statuses/filter', {
-      track: topics[topicId].tokens[tokenId]
-    });
-  }, topicSwitchInterval);
-
   stream1.on('tweet', function(tweet) {
     // send tweet to client
     io.emit('tweetFeed1', tweet);
-    console.log(tweet.text);
-    // update concordance
-    updateWordConcordance(tweet.text, analysisGroups[1]);
+    speak(tweet.text)
+    // // update concordance
+    // updateWordConcordance(tweet.text, analysisGroups[1]);
   });
 }
 
@@ -300,8 +428,8 @@ function speak(text) {
   if (!talking) {
     talking = true;
     // var cmdText = 'espeak -s50 -p160 -g8 "' + text + '"';
-    // var cmdText = '.googleTTS.sh' + text;
-    var cmdText = 'say -v Samantha -r 2000 "' + text + '"'; // for macOS only
+    var cmdText = './googleTTS.sh "' + text+ '"';
+    // var cmdText = 'say -v Samantha -r 2000 "' + text + '"'; // for macOS only
     cmd = childProcess.exec(cmdText, function(error, stdout, stderr) {
       console.log("voice ON");
       if (error !== null) {
